@@ -35,5 +35,6 @@
 
 	<modules>
 		<module>gelco-discovery</module>
+		<module>gelco-config</module>
 	</modules>
 </project>
