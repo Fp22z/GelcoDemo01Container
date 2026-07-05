@@ -34,5 +34,6 @@
 	</dependencies>
 
 	<modules>
+		<module>gelco-discovery</module>
 	</modules>
 </project>
