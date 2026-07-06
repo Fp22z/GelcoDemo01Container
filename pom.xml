@@ -36,5 +36,7 @@
 	<modules>
 		<module>gelco-discovery</module>
 		<module>gelco-config</module>
+		<module>gelco-gateway</module>
+		<module>gelco-auth-service</module>
 	</modules>
 </project>
