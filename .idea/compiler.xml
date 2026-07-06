@@ -9,6 +9,7 @@
         <module name="gelco-gateway" />
         <module name="gelco-config" />
         <module name="gelco-auth-service" />
+        <module name="gelco-ventas-service" />
         <module name="gelco-discovery" />
       </profile>
     </annotationProcessing>
@@ -20,6 +21,7 @@
       <module name="gelco-config" options="-parameters" />
       <module name="gelco-discovery" options="-parameters" />
       <module name="gelco-gateway" options="-parameters" />
+      <module name="gelco-ventas-service" options="-parameters" />
     </option>
   </component>
 </project>

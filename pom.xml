@@ -38,5 +38,6 @@
 		<module>gelco-config</module>
 		<module>gelco-gateway</module>
 		<module>gelco-auth-service</module>
+		<module>gelco-ventas-service</module>
 	</modules>
 </project>
