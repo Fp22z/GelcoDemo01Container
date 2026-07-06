@@ -6,6 +6,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="gelco-ops-service" />
         <module name="gelco-gateway" />
         <module name="gelco-config" />
         <module name="gelco-auth-service" />
@@ -21,6 +22,7 @@
       <module name="gelco-config" options="-parameters" />
       <module name="gelco-discovery" options="-parameters" />
       <module name="gelco-gateway" options="-parameters" />
+      <module name="gelco-ops-service" options="-parameters" />
       <module name="gelco-ventas-service" options="-parameters" />
     </option>
   </component>
