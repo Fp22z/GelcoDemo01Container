@@ -21,7 +21,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/devoluciones")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Devoluciones", description = "Validar devoluciones y cambios - HU14")
 public class DevolucionController {
 

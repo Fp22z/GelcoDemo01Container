@@ -12,7 +12,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/home")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class HomeController {
 
     private final HomeService homeService;

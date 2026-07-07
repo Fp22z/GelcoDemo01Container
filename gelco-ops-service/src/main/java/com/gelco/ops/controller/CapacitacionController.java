@@ -23,7 +23,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/capacitaciones")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class CapacitacionController {
 
     private final CapacitacionService capacitacionService;

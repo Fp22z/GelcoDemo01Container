@@ -9,6 +9,19 @@ spring:
           discovery:
             locator:
               enabled: true
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOriginPatterns: "*"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - PATCH
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders: "*"
+                allowCredentials: true
           routes:
             - id: auth-service
               uri: lb://gelco-auth-service

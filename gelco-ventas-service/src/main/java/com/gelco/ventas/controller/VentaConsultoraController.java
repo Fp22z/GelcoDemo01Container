@@ -13,7 +13,6 @@ import java.math.BigDecimal;
 @RestController
 @RequestMapping("/api/v1/ventas")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class VentaConsultoraController {
 
     private final VentaConsultoraService ventaConsultoraService;

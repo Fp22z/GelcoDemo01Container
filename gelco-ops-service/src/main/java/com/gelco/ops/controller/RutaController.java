@@ -13,7 +13,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/rutas")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class RutaController {
 
     private final RutaService rutaService;
