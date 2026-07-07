@@ -6,16 +6,10 @@ import com.gelco.ops.dto.CapacitacionRequest;
 import com.gelco.ops.dto.PreguntaRequest;
 import com.gelco.ops.dto.PreguntaResponse;
 import com.gelco.ops.dto.EfektividadCapacitacionResponse;
-import com.gelco.ops.model.Capacitacion;
-import com.gelco.ops.model.CapacitacionConsultora;
-import com.gelco.ops.model.CapacitacionPregunta;
-import com.gelco.ops.model.Consultora;
-import com.gelco.ops.model.VentaConsultora;
-import com.gelco.ops.repository.CapacitacionConsultoraRepository;
-import com.gelco.ops.repository.CapacitacionPreguntaRepository;
-import com.gelco.ops.repository.CapacitacionRepository;
-import com.gelco.ops.repository.ConsultoraRepository;
-import com.gelco.ops.repository.VentaConsultoraRepository;
+import com.gelco.ops.model.*;
+import com.gelco.ops.client.VentasClient;
+import com.gelco.ops.repository.*;
+import com.gelco.ops.dto.VentaConsultoraDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +30,8 @@ public class CapacitacionService {
     private final CapacitacionConsultoraRepository capacitacionConsultoraRepository;
     private final CapacitacionPreguntaRepository capacitacionPreguntaRepository;
     private final ConsultoraRepository consultoraRepository;
-    private final VentaConsultoraRepository ventaConsultoraRepository;
+    private final VentasClient ventasClient;
+
 
     public List<CapacitacionResponse> getAllCapacitaciones() {
         try {
@@ -274,18 +269,16 @@ public class CapacitacionService {
                 BigDecimal ventasDespues = BigDecimal.ZERO;
                 BigDecimal porcentajeMejora = BigDecimal.ZERO;
 
-                Optional<VentaConsultora> optVentaAntes = ventaConsultoraRepository
-                        .findByConsultoraIdAndMesAndAnio(consul.getId(), mesAntes, anioAntes);
-                if (optVentaAntes.isPresent()) {
-                    ventasAntes = optVentaAntes.get().getTotalVentas();
+                VentaConsultoraDTO ventaAntes = ventasClient.getVentaPorMes(consul.getId(), mesAntes, anioAntes);
+                if (ventaAntes.getRegistros() != null && ventaAntes.getRegistros() > 0) {
+                    ventasAntes = ventaAntes.getTotalVentas();
                     sumVentasAntes = sumVentasAntes.add(ventasAntes);
                     countVentasAntes++;
                 }
 
-                Optional<VentaConsultora> optVentaDespues = ventaConsultoraRepository
-                        .findByConsultoraIdAndMesAndAnio(consul.getId(), mesDespues, anioDespues);
-                if (optVentaDespues.isPresent()) {
-                    ventasDespues = optVentaDespues.get().getTotalVentas();
+                VentaConsultoraDTO ventaDespues = ventasClient.getVentaPorMes(consul.getId(), mesDespues, anioDespues);
+                if (ventaDespues.getRegistros() != null && ventaDespues.getRegistros() > 0) {
+                    ventasDespues = ventaDespues.getTotalVentas();
                     sumVentasDespues = sumVentasDespues.add(ventasDespues);
                     countVentasDespues++;
                 }

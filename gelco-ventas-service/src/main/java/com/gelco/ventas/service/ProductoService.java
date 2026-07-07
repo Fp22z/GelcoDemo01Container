@@ -2,10 +2,12 @@ package com.gelco.ventas.service;
 
 import com.gelco.ventas.dto.ProductoResponse;
 import com.gelco.ventas.model.Categoria;
+import com.gelco.ventas.model.InventarioMovimiento;
 import com.gelco.ventas.model.Producto;
 import com.gelco.ventas.repository.CategoriaRepository;
 import com.gelco.ventas.repository.DetallePedidoRepository;
 import com.gelco.ventas.repository.ProductoRepository;
+import com.gelco.ventas.repository.InventarioMovimientoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +26,7 @@ public class ProductoService {
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
     private final DetallePedidoRepository detallePedidoRepository;
+    private final InventarioMovimientoRepository inventarioMovimientoRepository;
 
     public List<ProductoResponse> getAllProductos() {
         try {
@@ -270,6 +273,22 @@ public class ProductoService {
         }
     }
 
+    // En ProductoService (Ventas) — agrega este método
+    @Transactional
+    public void reponerStockPorDevolucion(Long productoId, Integer cantidad) {
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + productoId));
+        producto.setStock(producto.getStock() + cantidad);
+        productoRepository.save(producto);
+
+        InventarioMovimiento movimiento = new InventarioMovimiento();
+        movimiento.setProducto(producto);
+        movimiento.setTipo("DEVOLUCION");
+        movimiento.setCantidad(cantidad);
+        movimiento.setFecha(LocalDateTime.now());
+        inventarioMovimientoRepository.save(movimiento);
+    }
+
     public record InventarioResumen(
             long totalProductos,
             long productosActivos,
@@ -293,4 +312,5 @@ public class ProductoService {
             Integer cantidadSugerida,
             BigDecimal precio
     ) {}
+
 }

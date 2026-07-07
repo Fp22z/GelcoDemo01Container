@@ -3,6 +3,7 @@ package com.gelco.ventas.controller;
 import com.gelco.ventas.dto.CrearPedidoRequest;
 import com.gelco.ventas.dto.ErrorResponse;
 import com.gelco.ventas.dto.PedidoResponse;
+import com.gelco.ventas.dto.ReponerStockRequest;
 import com.gelco.ventas.repository.ConsultoraRepository;
 import com.gelco.ventas.service.PedidoService;
 import com.gelco.ventas.util.JwtUtil;
@@ -185,5 +186,15 @@ public class PedidoController {
             throw new IllegalArgumentException("Token de autorización no proporcionado");
         }
         return header.substring(7);
+    }
+    // En PedidoController (Ventas)
+    @GetMapping("/detalle/{detallePedidoId}")
+    public ResponseEntity<?> getDetalleParaDevolucion(@PathVariable Long detallePedidoId) {
+        try {
+            return ResponseEntity.ok(pedidoService.getDetalleParaDevolucion(detallePedidoId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse(400, "Detalle no encontrado", e.getMessage()));
+        }
     }
 }

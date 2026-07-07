@@ -1,6 +1,7 @@
 package com.gelco.ventas.service;
 
 import com.gelco.ventas.dto.CrearPedidoRequest;
+import com.gelco.ventas.dto.DetallePedidoDevolucionResponse;
 import com.gelco.ventas.dto.PedidoResponse;
 import com.gelco.ventas.model.*;
 import com.gelco.ventas.repository.*;
@@ -166,4 +167,21 @@ public class PedidoService {
 
     // ── Record interno de validación ──────────────────────────────
     private record ItemValidado(Producto producto, Integer cantidad) {}
+
+    // En PedidoService (Ventas)
+    public DetallePedidoDevolucionResponse getDetalleParaDevolucion(Long detallePedidoId) {
+        DetallePedido detalle = detallePedidoRepository.findById(detallePedidoId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Detalle de pedido no encontrado con id: " + detallePedidoId));
+
+        return new DetallePedidoDevolucionResponse(
+                detalle.getId(),
+                detalle.getCantidad(),
+                detalle.getProducto().getId(),
+                detalle.getProducto().getNombre(),
+                detalle.getPedido().getId(),
+                detalle.getPedido().getEstado(),
+                detalle.getPedido().getCliente().getNombre()
+        );
+    }
 }

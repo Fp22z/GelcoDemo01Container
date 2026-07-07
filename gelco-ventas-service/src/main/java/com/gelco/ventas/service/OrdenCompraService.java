@@ -9,8 +9,6 @@ import com.gelco.ventas.repository.ConsultoraRepository;
 import com.gelco.ventas.repository.FacturaRepository;
 import com.gelco.ventas.repository.OrdenCompraRepository;
 import com.gelco.ventas.repository.PedidoRepository;
-import com.gelco.ventas.model.*;
-import com.gelco.ventas.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

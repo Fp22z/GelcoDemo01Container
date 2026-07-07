@@ -14,7 +14,7 @@ public class DevolucionResponse {
 
     private Integer id;
     private Integer detallePedidoId;
-    private Long pedidoId;       // Queda en Long ya que el repositorio de Pedido lo usa internamente
+    private Long pedidoId;
     private String clienteNombre;
     private Integer productoId;
     private String productoNombre;
@@ -30,11 +30,11 @@ public class DevolucionResponse {
     public static DevolucionResponse fromEntity(Devolucion d) {
         DevolucionResponse r = new DevolucionResponse();
         r.setId(d.getId());
-        r.setDetallePedidoId(d.getDetallePedido().getId().intValue());
-        r.setPedidoId(d.getDetallePedido().getPedido().getId());
-        r.setClienteNombre(d.getDetallePedido().getPedido().getCliente().getNombre());
-        r.setProductoId(d.getDetallePedido().getProducto().getId().intValue());
-        r.setProductoNombre(d.getDetallePedido().getProducto().getNombre());
+        r.setDetallePedidoId(d.getDetallePedidoId().intValue());
+        r.setPedidoId(d.getPedidoId());
+        r.setClienteNombre(d.getClienteNombre());
+        r.setProductoId(d.getProductoId().intValue());
+        r.setProductoNombre(d.getProductoNombre());
         r.setCantidad(d.getCantidad());
         r.setTipo(d.getTipo());
         r.setMotivo(d.getMotivo());

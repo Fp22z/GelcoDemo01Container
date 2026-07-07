@@ -1,17 +1,14 @@
 package com.gelco.ops.service;
 
+import com.gelco.ops.client.VentasClient;
 import com.gelco.ops.dto.CrearDevolucionRequest;
+import com.gelco.ops.dto.DetallePedidoDevolucionResponse;
 import com.gelco.ops.dto.DevolucionResponse;
-import com.gelco.ops.model.DetallePedido;
+import com.gelco.ops.dto.ReponerStockRequest;
 import com.gelco.ops.model.Devolucion;
-import com.gelco.ops.model.Producto;
 import com.gelco.ops.model.Usuario;
-import com.gelco.ops.repository.DetallePedidoRepository;
 import com.gelco.ops.repository.DevolucionRepository;
-import com.gelco.ops.repository.ProductoRepository;
 import com.gelco.ops.repository.UsuarioRepository;
-import com.gelco.ops.model.InventarioMovimiento;
-import com.gelco.ops.repository.InventarioMovimientoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,10 +25,8 @@ public class DevolucionService {
     private static final List<String> CONDICIONES_VALIDAS = List.of("Apto", "No apto");
 
     private final DevolucionRepository devolucionRepository;
-    private final DetallePedidoRepository detallePedidoRepository;
-    private final ProductoRepository productoRepository;
     private final UsuarioRepository usuarioRepository;
-    private final InventarioMovimientoRepository inventarioMovimientoRepository;
+    private final VentasClient ventasClient;
 
     @Transactional
     public DevolucionResponse crearDevolucion(Long usuarioId, CrearDevolucionRequest request) {
@@ -43,17 +38,21 @@ public class DevolucionService {
             throw new IllegalArgumentException("Condición inválida. Valores permitidos: " + CONDICIONES_VALIDAS);
         }
 
-        DetallePedido detalle = detallePedidoRepository.findById(request.getDetallePedidoId().longValue())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Detalle de pedido no encontrado con id: " + request.getDetallePedidoId()));
-
-        String estadoPedido = detalle.getPedido().getEstado();
-        if (!"Entregado".equals(estadoPedido)) {
+        DetallePedidoDevolucionResponse detalle;
+        try {
+            detalle = ventasClient.getDetalleParaDevolucion(request.getDetallePedidoId());
+        } catch (Exception e) {
             throw new IllegalArgumentException(
-                    "Solo se pueden procesar devoluciones de pedidos en estado 'Entregado'. Estado actual: " + estadoPedido);
+                    "Detalle de pedido no encontrado con id: " + request.getDetallePedidoId());
         }
 
-        Integer yaDevuelto = devolucionRepository.sumCantidadDevueltaByDetalleId(request.getDetallePedidoId().longValue());
+        if (!"Entregado".equals(detalle.getPedidoEstado())) {
+            throw new IllegalArgumentException(
+                    "Solo se pueden procesar devoluciones de pedidos en estado 'Entregado'. Estado actual: "
+                            + detalle.getPedidoEstado());
+        }
+
+        Integer yaDevuelto = devolucionRepository.sumCantidadDevueltaByDetalleId(request.getDetallePedidoId());
         int disponible = detalle.getCantidad() - (yaDevuelto != null ? yaDevuelto : 0);
         if (request.getCantidad() > disponible) {
             throw new IllegalArgumentException(
@@ -65,21 +64,17 @@ public class DevolucionService {
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con id: " + usuarioId));
 
         if ("Apto".equals(request.getCondicionProducto())) {
-            Producto producto = detalle.getProducto();
-            producto.setStock(producto.getStock() + request.getCantidad());
-            productoRepository.save(producto);
-            InventarioMovimiento movimiento = new InventarioMovimiento();
-            movimiento.setProducto(producto);
-            movimiento.setTipo("DEVOLUCION");
-            movimiento.setCantidad(request.getCantidad());
-            movimiento.setFecha(LocalDateTime.now());
-            inventarioMovimientoRepository.save(movimiento);
+            ReponerStockRequest reponerRequest = new ReponerStockRequest();
+            reponerRequest.setCantidad(request.getCantidad());
+            ventasClient.reponerStockPorDevolucion(detalle.getProductoId(), reponerRequest);
         }
-        // Si es "No apto", no se repone — el producto se pierde, pero el registro
-        // queda igual para que el facturador ajuste la factura en otra HU.
 
         Devolucion devolucion = new Devolucion();
-        devolucion.setDetallePedido(detalle);
+        devolucion.setDetallePedidoId(detalle.getDetallePedidoId());
+        devolucion.setProductoId(detalle.getProductoId());
+        devolucion.setProductoNombre(detalle.getProductoNombre());
+        devolucion.setPedidoId(detalle.getPedidoId());
+        devolucion.setClienteNombre(detalle.getClienteNombre());
         devolucion.setCantidad(request.getCantidad());
         devolucion.setTipo(request.getTipo());
         devolucion.setMotivo(request.getMotivo());
@@ -105,7 +100,6 @@ public class DevolucionService {
 
     @Transactional(readOnly = true)
     public List<DevolucionResponse> getDevolucionesByDetalle(Integer detallePedidoId) {
-        // CORRECCIÓN: Agregado .longValue() para el repositorio
         return devolucionRepository.findByDetallePedidoId(detallePedidoId.longValue()).stream()
                 .map(DevolucionResponse::fromEntity)
                 .collect(Collectors.toList());
@@ -113,9 +107,13 @@ public class DevolucionService {
 
     @Transactional(readOnly = true)
     public Integer getCantidadDisponibleParaDevolucion(Integer detallePedidoId) {
-        DetallePedido detalle = detallePedidoRepository.findById(detallePedidoId.longValue())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Detalle de pedido no encontrado con id: " + detallePedidoId));
+        DetallePedidoDevolucionResponse detalle;
+        try {
+            detalle = ventasClient.getDetalleParaDevolucion(detallePedidoId.longValue());
+        } catch (Exception e) {
+            throw new IllegalArgumentException(
+                    "Detalle de pedido no encontrado con id: " + detallePedidoId);
+        }
         Integer yaDevuelto = devolucionRepository.sumCantidadDevueltaByDetalleId(detallePedidoId.longValue());
         return detalle.getCantidad() - (yaDevuelto != null ? yaDevuelto : 0);
     }

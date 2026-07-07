@@ -2,6 +2,7 @@ package com.gelco.ventas.controller;
 
 import com.gelco.ventas.dto.ErrorResponse;
 import com.gelco.ventas.dto.ProductoResponse;
+import com.gelco.ventas.dto.ReponerStockRequest;
 import com.gelco.ventas.service.ProductoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -211,4 +212,18 @@ public class ProductoController {
                     .body(new ErrorResponse(500, "Error al obtener movimientos", e.getMessage()));
         }
     }
+
+    @PostMapping("/{id}/reponer-stock")
+    public ResponseEntity<?> reponerStockPorDevolucion(
+            @PathVariable Long id,
+            @RequestBody ReponerStockRequest request) {
+        try {
+            productoService.reponerStockPorDevolucion(id, request.getCantidad());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse(400, "Error al reponer stock", e.getMessage()));
+        }
+    }
+
 }

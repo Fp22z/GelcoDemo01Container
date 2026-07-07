@@ -18,10 +18,22 @@ public class Devolucion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    // El ítem específico del pedido que se devuelve/cambia
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "detalle_pedido_id", nullable = false)
-    private DetallePedido detallePedido;
+    // Ya no es una relación JPA — Ops no tiene la tabla detalle_pedido.
+    // Guardamos solo el id y un snapshot de los datos que Ventas devolvió.
+    @Column(name = "detalle_pedido_id", nullable = false)
+    private Long detallePedidoId;
+
+    @Column(name = "producto_id", nullable = false)
+    private Long productoId;
+
+    @Column(name = "producto_nombre", length = 150)
+    private String productoNombre;
+
+    @Column(name = "pedido_id", nullable = false)
+    private Long pedidoId;
+
+    @Column(name = "cliente_nombre", length = 150)
+    private String clienteNombre;
 
     @Column(nullable = false)
     private Integer cantidad;
@@ -35,7 +47,6 @@ public class Devolucion {
     @Column(name = "condicion_producto", nullable = false, length = 20)
     private String condicionProducto; // "Apto" | "No apto"
 
-    // Queda en "Procesada" — listo para que el Facturador la tome en otra HU
     @Column(nullable = false, length = 30)
     private String estado = "Procesada";
 
@@ -45,6 +56,7 @@ public class Devolucion {
     @Column(name = "fecha_solicitud", nullable = false)
     private LocalDateTime fechaSolicitud;
 
+    // Usuario sigue siendo relación JPA -- es modelo propio de Ops (copia local legítima)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recepcionista_id", nullable = false)
     private Usuario recepcionista;
