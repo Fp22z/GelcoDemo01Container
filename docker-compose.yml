@@ -1,0 +1,92 @@
+services:
+
+  gelco-discovery:
+    build: ./gelco-discovery
+    container_name: gelco-discovery
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8761/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  gelco-config:
+    build: ./gelco-config
+    container_name: gelco-config
+    ports:
+      - "8888:8888"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gelco-discovery:8761/eureka/
+    depends_on:
+      gelco-discovery:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8888/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  gelco-auth-service:
+    build: ./gelco-auth-service
+    container_name: gelco-auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://gelco-config:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gelco-discovery:8761/eureka/
+    depends_on:
+      gelco-config:
+        condition: service_healthy
+      gelco-discovery:
+        condition: service_healthy
+
+  gelco-ventas-service:
+    build: ./gelco-ventas-service
+    container_name: gelco-ventas-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://gelco-config:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gelco-discovery:8761/eureka/
+    depends_on:
+      gelco-config:
+        condition: service_healthy
+      gelco-discovery:
+        condition: service_healthy
+
+  gelco-ops-service:
+    build: ./gelco-ops-service
+    container_name: gelco-ops-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://gelco-config:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gelco-discovery:8761/eureka/
+    depends_on:
+      gelco-config:
+        condition: service_healthy
+      gelco-discovery:
+        condition: service_healthy
+      gelco-ventas-service:
+        condition: service_started
+
+  gelco-gateway:
+    build: ./gelco-gateway
+    container_name: gelco-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://gelco-config:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gelco-discovery:8761/eureka/
+    depends_on:
+      gelco-config:
+        condition: service_healthy
+      gelco-discovery:
+        condition: service_healthy
+      gelco-auth-service:
+        condition: service_started
+      gelco-ventas-service:
+        condition: service_started
+      gelco-ops-service:
+        condition: service_started

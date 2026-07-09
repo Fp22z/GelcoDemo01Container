@@ -1,0 +1,19 @@
+.env
+*.env
+
+# Archivos compilados de Java y Maven
+target/
+*.class
+*.jar
+*.war
+.mvn/
+
+.idea/
+*.iml
+
+# Archivos de logs
+*.log
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
