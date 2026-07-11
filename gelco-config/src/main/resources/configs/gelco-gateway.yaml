@@ -40,9 +40,13 @@ spring:
               predicates:
                 - Path=/api/v1/productos/**,/api/v1/categorias/**
             - id: consultoras-service
-            - uri: lb://gelco-consultoras-service
-            - predicates:
-            - Path=/api/v1/consultoras/**,/api/v1/ventas/**
+              uri: lb://gelco-consultoras-service
+              predicates:
+                - Path=/api/v1/consultoras/**,/api/v1/ventas/**
+            - id: distribucion-service
+              uri: lb://gelco-distribucion-service
+              predicates:
+                - Path=/api/v1/rutas/**
 
 eureka:
   instance:

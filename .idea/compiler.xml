@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="gelco-ops-service" />
         <module name="gelco-config" />
+        <module name="gelco-distribucion-service" />
         <module name="gelco-discovery" />
         <module name="gelco-consultoras-service" />
         <module name="gelco-catalogo-service" />
@@ -25,6 +26,7 @@
       <module name="gelco-config" options="-parameters" />
       <module name="gelco-consultoras-service" options="-parameters" />
       <module name="gelco-discovery" options="-parameters" />
+      <module name="gelco-distribucion-service" options="-parameters" />
       <module name="gelco-gateway" options="-parameters" />
       <module name="gelco-ops-service" options="-parameters" />
       <module name="gelco-ventas-service" options="-parameters" />
