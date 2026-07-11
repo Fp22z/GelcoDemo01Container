@@ -9,6 +9,7 @@
         <module name="gelco-ops-service" />
         <module name="gelco-config" />
         <module name="gelco-discovery" />
+        <module name="gelco-consultoras-service" />
         <module name="gelco-catalogo-service" />
         <module name="gelco-gateway" />
         <module name="gelco-auth-service" />
@@ -22,6 +23,7 @@
       <module name="gelco-auth-service" options="-parameters" />
       <module name="gelco-catalogo-service" options="-parameters" />
       <module name="gelco-config" options="-parameters" />
+      <module name="gelco-consultoras-service" options="-parameters" />
       <module name="gelco-discovery" options="-parameters" />
       <module name="gelco-gateway" options="-parameters" />
       <module name="gelco-ops-service" options="-parameters" />
