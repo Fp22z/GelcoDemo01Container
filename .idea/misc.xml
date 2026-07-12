@@ -12,6 +12,7 @@
         <option value="$PROJECT_DIR$/gelco-distribucion-service/pom.xml" />
         <option value="$PROJECT_DIR$/gelco-pedidos-service/pom.xml" />
         <option value="$PROJECT_DIR$/gelco-devoluciones-service/pom.xml" />
+        <option value="$PROJECT_DIR$/gelco-capacitacion-service/pom.xml" />
       </list>
     </option>
   </component>
