@@ -38,12 +38,12 @@
 		<module>gelco-config</module>
 		<module>gelco-gateway</module>
 		<module>gelco-auth-service</module>
-		<module>gelco-ventas-service</module>
-		<module>gelco-ops-service</module>
 		<module>gelco-catalogo-service</module>
 		<module>gelco-consultoras-service</module>
 		<module>gelco-distribucion-service</module>
 		<module>gelco-pedidos-service</module>
 		<module>gelco-capacitacion-service</module>
+		<module>gelco-reportes-service</module>
+		<module>gelco-devoluciones-service</module>
 	</modules>
 </project>

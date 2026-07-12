@@ -13,7 +13,14 @@
         <option value="$PROJECT_DIR$/gelco-pedidos-service/pom.xml" />
         <option value="$PROJECT_DIR$/gelco-devoluciones-service/pom.xml" />
         <option value="$PROJECT_DIR$/gelco-capacitacion-service/pom.xml" />
+        <option value="$PROJECT_DIR$/gelco-reportes-service/pom.xml" />
       </list>
+    </option>
+    <option name="ignoredFiles">
+      <set>
+        <option value="$PROJECT_DIR$/gelco-ops-service/pom.xml" />
+        <option value="$PROJECT_DIR$/gelco-ventas-service/pom.xml" />
+      </set>
     </option>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_21" default="true" project-jdk-name="21" project-jdk-type="JavaSDK" />

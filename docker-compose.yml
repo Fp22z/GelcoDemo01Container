@@ -41,9 +41,9 @@ services:
       gelco-discovery:
         condition: service_healthy
 
-  gelco-ventas-service:
-    build: ./gelco-ventas-service
-    container_name: gelco-ventas-service
+  gelco-catalogo-service:
+    build: ./gelco-catalogo-service
+    container_name: gelco-catalogo-service
     ports:
       - "8082:8082"
     environment:
@@ -55,9 +55,9 @@ services:
       gelco-discovery:
         condition: service_healthy
 
-  gelco-ops-service:
-    build: ./gelco-ops-service
-    container_name: gelco-ops-service
+  gelco-pedidos-service:
+    build: ./gelco-pedidos-service
+    container_name: gelco-pedidos-service
     ports:
       - "8083:8083"
     environment:
@@ -68,7 +68,89 @@ services:
         condition: service_healthy
       gelco-discovery:
         condition: service_healthy
-      gelco-ventas-service:
+      gelco-catalogo-service:
+        condition: service_started
+
+  gelco-consultoras-service:
+    build: ./gelco-consultoras-service
+    container_name: gelco-consultoras-service
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://gelco-config:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gelco-discovery:8761/eureka/
+    depends_on:
+      gelco-config:
+        condition: service_healthy
+      gelco-discovery:
+        condition: service_healthy
+
+  gelco-capacitacion-service:
+    build: ./gelco-capacitacion-service
+    container_name: gelco-capacitacion-service
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://gelco-config:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gelco-discovery:8761/eureka/
+    depends_on:
+      gelco-config:
+        condition: service_healthy
+      gelco-discovery:
+        condition: service_healthy
+      gelco-consultoras-service:
+        condition: service_started
+
+  gelco-devoluciones-service:
+    build: ./gelco-devoluciones-service
+    container_name: gelco-devoluciones-service
+    ports:
+      - "8086:8086"
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://gelco-config:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gelco-discovery:8761/eureka/
+    depends_on:
+      gelco-config:
+        condition: service_healthy
+      gelco-discovery:
+        condition: service_healthy
+      gelco-pedidos-service:
+        condition: service_started
+      gelco-catalogo-service:
+        condition: service_started
+
+  gelco-distribucion-service:
+    build: ./gelco-distribucion-service
+    container_name: gelco-distribucion-service
+    ports:
+      - "8087:8087"
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://gelco-config:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gelco-discovery:8761/eureka/
+    depends_on:
+      gelco-config:
+        condition: service_healthy
+      gelco-discovery:
+        condition: service_healthy
+
+  gelco-reportes-service:
+    build: ./gelco-reportes-service
+    container_name: gelco-reportes-service
+    ports:
+      - "8088:8088"
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://gelco-config:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gelco-discovery:8761/eureka/
+    depends_on:
+      gelco-config:
+        condition: service_healthy
+      gelco-discovery:
+        condition: service_healthy
+      gelco-pedidos-service:
+        condition: service_started
+      gelco-consultoras-service:
+        condition: service_started
+      gelco-catalogo-service:
         condition: service_started
 
   gelco-gateway:
@@ -86,7 +168,17 @@ services:
         condition: service_healthy
       gelco-auth-service:
         condition: service_started
-      gelco-ventas-service:
+      gelco-catalogo-service:
         condition: service_started
-      gelco-ops-service:
+      gelco-pedidos-service:
+        condition: service_started
+      gelco-consultoras-service:
+        condition: service_started
+      gelco-capacitacion-service:
+        condition: service_started
+      gelco-devoluciones-service:
+        condition: service_started
+      gelco-distribucion-service:
+        condition: service_started
+      gelco-reportes-service:
         condition: service_started

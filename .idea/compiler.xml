@@ -6,20 +6,23 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="gelco-ops-service" />
-        <module name="gelco-config" />
-        <module name="gelco-distribucion-service" />
+        <module name="gelco-reportes-service" />
         <module name="gelco-discovery" />
         <module name="gelco-consultoras-service" />
         <module name="gelco-devoluciones-service" />
         <module name="gelco-pedidos-service" />
-        <module name="gelco-catalogo-service" />
-        <module name="gelco-gateway" />
         <module name="gelco-auth-service" />
         <module name="gelco-capacitacion-service" />
-        <module name="gelco-ventas-service" />
+        <module name="gelco-config" />
+        <module name="gelco-distribucion-service" />
+        <module name="gelco-catalogo-service" />
+        <module name="gelco-gateway" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="gelco-ops-service" target="21" />
+      <module name="gelco-ventas-service" target="21" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
@@ -35,6 +38,7 @@
       <module name="gelco-gateway" options="-parameters" />
       <module name="gelco-ops-service" options="-parameters" />
       <module name="gelco-pedidos-service" options="-parameters" />
+      <module name="gelco-reportes-service" options="-parameters" />
       <module name="gelco-ventas-service" options="-parameters" />
     </option>
   </component>
