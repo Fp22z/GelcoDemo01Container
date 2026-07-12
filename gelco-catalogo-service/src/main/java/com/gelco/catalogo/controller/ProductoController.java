@@ -3,6 +3,7 @@ package com.gelco.catalogo.controller;
 import com.gelco.catalogo.dto.ErrorResponse;
 import com.gelco.catalogo.dto.ProductoResponse;
 import com.gelco.catalogo.dto.ReponerStockRequest;
+import com.gelco.catalogo.model.Producto;
 import com.gelco.catalogo.repository.InventarioMovimientoRepository;
 import com.gelco.catalogo.service.ProductoService;
 import lombok.RequiredArgsConstructor;

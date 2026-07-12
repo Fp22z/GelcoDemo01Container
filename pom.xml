@@ -43,5 +43,6 @@
 		<module>gelco-catalogo-service</module>
 		<module>gelco-consultoras-service</module>
 		<module>gelco-distribucion-service</module>
+		<module>gelco-pedidos-service</module>
 	</modules>
 </project>

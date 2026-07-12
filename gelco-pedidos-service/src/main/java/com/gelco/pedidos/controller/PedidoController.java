@@ -1,12 +1,11 @@
-package com.gelco.ventas.controller;
+package com.gelco.pedidos.controller;
 
-import com.gelco.ventas.dto.CrearPedidoRequest;
-import com.gelco.ventas.dto.ErrorResponse;
-import com.gelco.ventas.dto.PedidoResponse;
-import com.gelco.ventas.dto.ReponerStockRequest;
-import com.gelco.ventas.repository.ConsultoraRepository;
-import com.gelco.ventas.service.PedidoService;
-import com.gelco.ventas.util.JwtUtil;
+import com.gelco.pedidos.dto.CrearPedidoRequest;
+import com.gelco.pedidos.dto.ErrorResponse;
+import com.gelco.pedidos.dto.PedidoResponse;
+import com.gelco.pedidos.repository.ConsultoraRepository;
+import com.gelco.pedidos.service.PedidoService;
+import com.gelco.pedidos.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -186,7 +185,7 @@ public class PedidoController {
         }
         return header.substring(7);
     }
-
+    // En PedidoController (Ventas)
     @GetMapping("/detalle/{detallePedidoId}")
     public ResponseEntity<?> getDetalleParaDevolucion(@PathVariable Long detallePedidoId) {
         try {
