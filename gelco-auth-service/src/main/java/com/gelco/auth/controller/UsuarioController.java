@@ -29,6 +29,8 @@ public class UsuarioController {
 
     record UsuarioListItem(Long id, String nombre, String email, String perfil, Boolean estado) {}
 
+    record UsuarioBasicResponse(Long id, String nombre, String email) {}
+
     @GetMapping
     public ResponseEntity<?> getAllUsuarios() {
         try {
@@ -45,6 +47,18 @@ public class UsuarioController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ErrorResponse(500, "Error al obtener usuarios", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUsuarioById(@PathVariable Long id) {
+        try {
+            Usuario usuario = usuarioRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+            return ResponseEntity.ok(new UsuarioBasicResponse(usuario.getId(), usuario.getNombre(), usuario.getEmail()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponse(404, "Usuario no encontrado", e.getMessage()));
         }
     }
 

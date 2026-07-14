@@ -35,8 +35,8 @@ public class CapacitacionConsultoraResponse {
         r.setCapacitacionTipo(capacitacionConsultora.getCapacitacion().getTipo());
         r.setCapacitacionUrlContenido(capacitacionConsultora.getCapacitacion().getUrlContenido());
         r.setCapacitacionDuracionMinutos(capacitacionConsultora.getCapacitacion().getDuracionMinutos());
-        r.setConsultoraId(capacitacionConsultora.getConsultora().getId());
-        r.setConsultoraNombre(capacitacionConsultora.getConsultora().getUsuario().getNombre());
+        r.setConsultoraId(capacitacionConsultora.getConsultoraId());
+        r.setConsultoraNombre(capacitacionConsultora.getConsultoraNombre());
         r.setCompletado(capacitacionConsultora.getCompletado());
         r.setPuntaje(capacitacionConsultora.getPuntaje());
         return r;

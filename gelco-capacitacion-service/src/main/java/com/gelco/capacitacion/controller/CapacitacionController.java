@@ -1,8 +1,7 @@
 package com.gelco.capacitacion.controller;
 
+import com.gelco.capacitacion.client.ConsultorasClient;
 import com.gelco.capacitacion.dto.*;
-import com.gelco.capacitacion.model.Consultora;
-import com.gelco.capacitacion.repository.ConsultoraRepository;
 import com.gelco.capacitacion.service.CapacitacionService;
 import com.gelco.capacitacion.util.JwtUtil;
 import jakarta.validation.Valid;
@@ -21,7 +20,7 @@ import java.util.Map;
 public class CapacitacionController {
 
     private final CapacitacionService capacitacionService;
-    private final ConsultoraRepository consultoraRepository;
+    private final ConsultorasClient consultorasClient;
     private final JwtUtil jwtUtil;
 
     @GetMapping
@@ -51,9 +50,13 @@ public class CapacitacionController {
         try {
             String token = authHeader.substring(7);
             Long usuarioId = jwtUtil.getUsuarioIdFromToken(token);
-            Consultora consultora = consultoraRepository.findByUsuarioId(usuarioId)
-                    .orElseThrow(() -> new IllegalArgumentException("No se encontró consultora para este usuario"));
-            List<CapacitacionConsultoraResponse> capacitaciones = capacitacionService.getCapacitacionesByConsultora(consultora.getId());
+            Long consultoraId;
+            try {
+                consultoraId = consultorasClient.getConsultoraByUsuario(usuarioId).id();
+            } catch (Exception e) {
+                throw new IllegalArgumentException("No se encontró consultora para este usuario");
+            }
+            List<CapacitacionConsultoraResponse> capacitaciones = capacitacionService.getCapacitacionesByConsultora(consultoraId);
             return ResponseEntity.ok(capacitaciones);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -164,9 +167,13 @@ public class CapacitacionController {
         try {
             String token = authHeader.substring(7);
             Long usuarioId = jwtUtil.getUsuarioIdFromToken(token);
-            Consultora consultora = consultoraRepository.findByUsuarioId(usuarioId)
-                    .orElseThrow(() -> new IllegalArgumentException("No se encontró consultora para este usuario"));
-            CapacitacionConsultoraResponse inscripcion = capacitacionService.inscribirConsultora(capacitacionId, consultora.getId());
+            Long consultoraId;
+            try {
+                consultoraId = consultorasClient.getConsultoraByUsuario(usuarioId).id();
+            } catch (Exception e) {
+                throw new IllegalArgumentException("No se encontró consultora para este usuario");
+            }
+            CapacitacionConsultoraResponse inscripcion = capacitacionService.inscribirConsultora(capacitacionId, consultoraId);
             return ResponseEntity.status(HttpStatus.CREATED).body(inscripcion);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -214,9 +221,13 @@ public class CapacitacionController {
         try {
             String token = authHeader.substring(7);
             Long usuarioId = jwtUtil.getUsuarioIdFromToken(token);
-            Consultora consultora = consultoraRepository.findByUsuarioId(usuarioId)
-                    .orElseThrow(() -> new IllegalArgumentException("No se encontró consultora para este usuario"));
-            capacitacionService.cancelarInscripcion(capacitacionId, consultora.getId());
+            Long consultoraId;
+            try {
+                consultoraId = consultorasClient.getConsultoraByUsuario(usuarioId).id();
+            } catch (Exception e) {
+                throw new IllegalArgumentException("No se encontró consultora para este usuario");
+            }
+            capacitacionService.cancelarInscripcion(capacitacionId, consultoraId);
             return ResponseEntity.ok().body(Map.of("message", "Inscripción cancelada exitosamente"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

@@ -3,13 +3,14 @@ server:
 
 spring:
   datasource:
-    url: jdbc:sqlserver://gelco-server.database.windows.net:1433;databaseName=GELCO;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
-    username: dbadmin
-    password: 123Gelco*456
+    url: jdbc:mysql://gelco-db-mysql:3306/gelco_pedidos?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: gelco_app
+    password: gelco2026*
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
-    database-platform: org.hibernate.dialect.SQLServerDialect
+    database-platform: org.hibernate.dialect.MySQLDialect
     show-sql: false
   servlet:
     multipart:

@@ -54,7 +54,9 @@ public class Devolucion {
     @Column(name = "fecha_solicitud", nullable = false)
     private LocalDateTime fechaSolicitud;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "recepcionista_id", nullable = false)
-    private Usuario recepcionista;
+    @Column(name = "recepcionista_id", nullable = false)
+    private Long recepcionistaId;
+
+    @Column(name = "recepcionista_nombre", length = 100)
+    private String recepcionistaNombre;
 }

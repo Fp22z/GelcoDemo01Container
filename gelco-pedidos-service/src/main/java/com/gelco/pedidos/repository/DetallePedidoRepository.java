@@ -12,21 +12,20 @@ import java.util.List;
 @Repository
 public interface DetallePedidoRepository extends JpaRepository<DetallePedido, Long> {
 
-    @Query("SELECT d FROM DetallePedido d JOIN FETCH d.producto WHERE d.pedido.id = :pedidoId")
-    List<DetallePedido> findByPedidoId(@Param("pedidoId") Long pedidoId);
+    List<DetallePedido> findByPedidoId(Long pedidoId);
 
-    @Query("SELECT d.producto.id, SUM(d.cantidad) as totalCantidad " +
-           "FROM DetallePedido d " +
-           "WHERE d.pedido.fecha >= :fechaDesde " +
-           "AND d.pedido.estado = 'Entregado' " +
-           "GROUP BY d.producto.id " +
-           "ORDER BY totalCantidad DESC")
+    @Query("SELECT d.productoId, SUM(d.cantidad) as totalCantidad " +
+            "FROM DetallePedido d " +
+            "WHERE d.pedido.fecha >= :fechaDesde " +
+            "AND d.pedido.estado = 'Entregado' " +
+            "GROUP BY d.productoId " +
+            "ORDER BY totalCantidad DESC")
     List<Object[]> findVentasAgrupadasPorProducto(@Param("fechaDesde") LocalDateTime fechaDesde);
 
-    @Query("SELECT d.producto.id, SUM(d.cantidad) as totalCantidad " +
-           "FROM DetallePedido d " +
-           "WHERE d.pedido.estado = 'Entregado' " +
-           "GROUP BY d.producto.id " +
-           "ORDER BY totalCantidad DESC")
+    @Query("SELECT d.productoId, SUM(d.cantidad) as totalCantidad " +
+            "FROM DetallePedido d " +
+            "WHERE d.pedido.estado = 'Entregado' " +
+            "GROUP BY d.productoId " +
+            "ORDER BY totalCantidad DESC")
     List<Object[]> findVentasAgrupadasPorProductoTodos();
 }

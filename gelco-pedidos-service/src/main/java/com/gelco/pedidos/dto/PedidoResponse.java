@@ -27,7 +27,6 @@ public class PedidoResponse {
     private LocalDateTime updatedAt;
     private List<DetallePedidoResponse> detalles;
 
-    // ── Detalle de cada línea ─────────────────────────────────────
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -42,8 +41,8 @@ public class PedidoResponse {
         public static DetallePedidoResponse fromEntity(DetallePedido d) {
             return new DetallePedidoResponse(
                     d.getId(),
-                    d.getProducto().getId(),
-                    d.getProducto().getNombre(),
+                    d.getProductoId(),
+                    d.getProductoNombre(),
                     d.getCantidad(),
                     d.getPrecioUnitario(),
                     d.getPrecioUnitario().multiply(BigDecimal.valueOf(d.getCantidad()))
@@ -51,7 +50,6 @@ public class PedidoResponse {
         }
     }
 
-    // ── Constructor sin detalles (para listados simples) ──────────
     public static PedidoResponse fromEntity(Pedido pedido) {
         return fromEntity(pedido, List.of());
     }
@@ -61,8 +59,8 @@ public class PedidoResponse {
         r.setId(pedido.getId());
         r.setClienteId(pedido.getCliente().getId());
         r.setClienteNombre(pedido.getCliente().getNombre());
-        r.setConsultoraId(pedido.getConsultora().getId());
-        r.setConsultoraUsuarioNombre(pedido.getConsultora().getUsuario().getNombre());
+        r.setConsultoraId(pedido.getConsultoraId());
+        r.setConsultoraUsuarioNombre(pedido.getConsultoraNombre());
         r.setFecha(pedido.getFecha());
         r.setEstado(pedido.getEstado());
         r.setTotal(pedido.getTotal());

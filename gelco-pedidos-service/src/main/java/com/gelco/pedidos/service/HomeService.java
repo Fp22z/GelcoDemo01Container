@@ -1,7 +1,8 @@
 package com.gelco.pedidos.service;
 
-import com.gelco.pedidos.model.Consultora;
-import com.gelco.pedidos.repository.*;
+import com.gelco.pedidos.client.ConsultorasClient;
+import com.gelco.pedidos.repository.ClienteRepository;
+import com.gelco.pedidos.repository.PedidoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +15,7 @@ public class HomeService {
 
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
-    private final ConsultoraRepository consultoraRepository;
+    private final ConsultorasClient consultorasClient;
 
     public Map<String, Object> getPublicHome() {
         Map<String, Object> home = new HashMap<>();
@@ -26,19 +27,20 @@ public class HomeService {
 
     public Map<String, Object> getConsultoraHome(Long usuarioId) {
         Map<String, Object> home = new HashMap<>();
-        Consultora consultora = consultoraRepository.findByUsuarioId(usuarioId)
-                .orElse(null);
-        if (consultora == null) {
+        ConsultorasClient.ConsultoraBasicResponse consultora;
+        try {
+            consultora = consultorasClient.getConsultoraByUsuario(usuarioId);
+        } catch (Exception e) {
             home.put("error", "No se encontró perfil de consultora");
             return home;
         }
         long pedidosPendientes = pedidoRepository
-                .countByConsultoraIdAndEstado(consultora.getId(), "Creado");
+                .countByConsultoraIdAndEstado(consultora.id(), "Creado");
         long totalClientes = clienteRepository
-                .findByConsultoraId(consultora.getId()).size();
+                .findByConsultoraId(consultora.id()).size();
         home.put("consultora", Map.of(
-                "id", consultora.getId(),
-                "nivel", consultora.getNivel() != null ? consultora.getNivel() : "Bronce"
+                "id", consultora.id(),
+                "nivel", consultora.nivel() != null ? consultora.nivel() : "Bronce"
         ));
         home.put("pedidosPendientes", pedidosPendientes);
         home.put("totalClientes", totalClientes);
@@ -49,7 +51,7 @@ public class HomeService {
         Map<String, Object> home = new HashMap<>();
         home.put("totalPedidos", pedidoRepository.count());
         home.put("totalClientes", clienteRepository.count());
-        home.put("totalConsultoras", consultoraRepository.count());
+        home.put("totalConsultoras", consultorasClient.getAllConsultoras().size());
         return home;
     }
 
@@ -61,7 +63,7 @@ public class HomeService {
 
     public Map<String, Object> getRrhhHome() {
         Map<String, Object> home = new HashMap<>();
-        home.put("totalConsultoras", consultoraRepository.count());
+        home.put("totalConsultoras", consultorasClient.getAllConsultoras().size());
         home.put("totalClientes", clienteRepository.count());
         return home;
     }

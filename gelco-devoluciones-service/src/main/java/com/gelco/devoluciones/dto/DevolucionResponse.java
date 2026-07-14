@@ -42,7 +42,7 @@ public class DevolucionResponse {
         r.setEstado(d.getEstado());
         r.setObservaciones(d.getObservaciones());
         r.setFechaSolicitud(d.getFechaSolicitud());
-        r.setRecepcionistaNombre(d.getRecepcionista().getNombre());
+        r.setRecepcionistaNombre(d.getRecepcionistaNombre());
         return r;
     }
 }

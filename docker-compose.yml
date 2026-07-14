@@ -1,5 +1,70 @@
 services:
 
+  # ══════════════════════════════════════════════════════════
+  # BASES DE DATOS
+  # ══════════════════════════════════════════════════════════
+
+  gelco-db-sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: gelco-db-sqlserver
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Gelco2026*Strong"
+      MSSQL_PID: "Express"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+      - ./init-db/mssql-init.sql:/init-db/mssql-init.sql
+      - ./init-db/mssql-entrypoint.sh:/init-db/mssql-entrypoint.sh
+    entrypoint: ["/bin/bash", "/init-db/mssql-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  gelco-db-postgres:
+    image: postgres:16-alpine
+    container_name: gelco-db-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: gelco_admin
+      POSTGRES_PASSWORD: gelco2026*
+      POSTGRES_MULTIPLE_DATABASES: gelco_catalogo,gelco_consultoras,gelco_devoluciones
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db/postgres-init.sh:/docker-entrypoint-initdb.d/init.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gelco_admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  gelco-db-mysql:
+    image: mysql:8.0
+    container_name: gelco-db-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: gelco2026*
+      MYSQL_USER: gelco_app
+      MYSQL_PASSWORD: gelco2026*
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-db/mysql-init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pgelco2026*"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ══════════════════════════════════════════════════════════
+  # INFRAESTRUCTURA
+  # ══════════════════════════════════════════════════════════
+
   gelco-discovery:
     build: ./gelco-discovery
     container_name: gelco-discovery
@@ -27,6 +92,24 @@ services:
       timeout: 5s
       retries: 10
 
+  gelco-gateway:
+    build: ./gelco-gateway
+    container_name: gelco-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://gelco-config:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gelco-discovery:8761/eureka/
+    depends_on:
+      gelco-config:
+        condition: service_healthy
+      gelco-discovery:
+        condition: service_healthy
+
+  # ══════════════════════════════════════════════════════════
+  # SERVICIOS DE NEGOCIO — SQL SERVER (Contenedor)
+  # ══════════════════════════════════════════════════════════
+
   gelco-auth-service:
     build: ./gelco-auth-service
     container_name: gelco-auth-service
@@ -40,6 +123,12 @@ services:
         condition: service_healthy
       gelco-discovery:
         condition: service_healthy
+      gelco-db-sqlserver:
+        condition: service_healthy
+
+  # ══════════════════════════════════════════════════════════
+  # SERVICIOS DE NEGOCIO — PostgreSQL
+  # ══════════════════════════════════════════════════════════
 
   gelco-catalogo-service:
     build: ./gelco-catalogo-service
@@ -54,22 +143,8 @@ services:
         condition: service_healthy
       gelco-discovery:
         condition: service_healthy
-
-  gelco-pedidos-service:
-    build: ./gelco-pedidos-service
-    container_name: gelco-pedidos-service
-    ports:
-      - "8083:8083"
-    environment:
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://gelco-config:8888
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gelco-discovery:8761/eureka/
-    depends_on:
-      gelco-config:
+      gelco-db-postgres:
         condition: service_healthy
-      gelco-discovery:
-        condition: service_healthy
-      gelco-catalogo-service:
-        condition: service_started
 
   gelco-consultoras-service:
     build: ./gelco-consultoras-service
@@ -84,22 +159,8 @@ services:
         condition: service_healthy
       gelco-discovery:
         condition: service_healthy
-
-  gelco-capacitacion-service:
-    build: ./gelco-capacitacion-service
-    container_name: gelco-capacitacion-service
-    ports:
-      - "8085:8085"
-    environment:
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://gelco-config:8888
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gelco-discovery:8761/eureka/
-    depends_on:
-      gelco-config:
+      gelco-db-postgres:
         condition: service_healthy
-      gelco-discovery:
-        condition: service_healthy
-      gelco-consultoras-service:
-        condition: service_started
 
   gelco-devoluciones-service:
     build: ./gelco-devoluciones-service
@@ -114,9 +175,53 @@ services:
         condition: service_healthy
       gelco-discovery:
         condition: service_healthy
+      gelco-db-postgres:
+        condition: service_healthy
       gelco-pedidos-service:
         condition: service_started
       gelco-catalogo-service:
+        condition: service_started
+      gelco-auth-service:
+        condition: service_started
+
+  # ══════════════════════════════════════════════════════════
+  # SERVICIOS DE NEGOCIO — MySQL
+  # ══════════════════════════════════════════════════════════
+
+  gelco-pedidos-service:
+    build: ./gelco-pedidos-service
+    container_name: gelco-pedidos-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://gelco-config:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gelco-discovery:8761/eureka/
+    depends_on:
+      gelco-config:
+        condition: service_healthy
+      gelco-discovery:
+        condition: service_healthy
+      gelco-db-mysql:
+        condition: service_healthy
+      gelco-catalogo-service:
+        condition: service_started
+
+  gelco-capacitacion-service:
+    build: ./gelco-capacitacion-service
+    container_name: gelco-capacitacion-service
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://gelco-config:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gelco-discovery:8761/eureka/
+    depends_on:
+      gelco-config:
+        condition: service_healthy
+      gelco-discovery:
+        condition: service_healthy
+      gelco-db-mysql:
+        condition: service_healthy
+      gelco-consultoras-service:
         condition: service_started
 
   gelco-distribucion-service:
@@ -132,6 +237,12 @@ services:
         condition: service_healthy
       gelco-discovery:
         condition: service_healthy
+      gelco-db-mysql:
+        condition: service_healthy
+
+  # ══════════════════════════════════════════════════════════
+  # SERVICIOS DE NEGOCIO — Sin BD propia
+  # ══════════════════════════════════════════════════════════
 
   gelco-reportes-service:
     build: ./gelco-reportes-service
@@ -153,32 +264,7 @@ services:
       gelco-catalogo-service:
         condition: service_started
 
-  gelco-gateway:
-    build: ./gelco-gateway
-    container_name: gelco-gateway
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://gelco-config:8888
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://gelco-discovery:8761/eureka/
-    depends_on:
-      gelco-config:
-        condition: service_healthy
-      gelco-discovery:
-        condition: service_healthy
-      gelco-auth-service:
-        condition: service_started
-      gelco-catalogo-service:
-        condition: service_started
-      gelco-pedidos-service:
-        condition: service_started
-      gelco-consultoras-service:
-        condition: service_started
-      gelco-capacitacion-service:
-        condition: service_started
-      gelco-devoluciones-service:
-        condition: service_started
-      gelco-distribucion-service:
-        condition: service_started
-      gelco-reportes-service:
-        condition: service_started
+volumes:
+  postgres_data:
+  mysql_data:
+  sqlserver_data:

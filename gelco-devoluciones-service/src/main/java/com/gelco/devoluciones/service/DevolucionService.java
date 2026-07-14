@@ -1,5 +1,6 @@
 package com.gelco.devoluciones.service;
 
+import com.gelco.devoluciones.client.AuthClient;
 import com.gelco.devoluciones.client.CatalogoClient;
 import com.gelco.devoluciones.client.PedidosClient;
 import com.gelco.devoluciones.dto.CrearDevolucionRequest;
@@ -7,9 +8,7 @@ import com.gelco.devoluciones.dto.DetallePedidoDevolucionResponse;
 import com.gelco.devoluciones.dto.DevolucionResponse;
 import com.gelco.devoluciones.dto.ReponerStockRequest;
 import com.gelco.devoluciones.model.Devolucion;
-import com.gelco.devoluciones.model.Usuario;
 import com.gelco.devoluciones.repository.DevolucionRepository;
-import com.gelco.devoluciones.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +25,7 @@ public class DevolucionService {
     private static final List<String> CONDICIONES_VALIDAS = List.of("Apto", "No apto");
 
     private final DevolucionRepository devolucionRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final AuthClient authClient;
     private final PedidosClient pedidosClient;
     private final CatalogoClient catalogoClient;
 
@@ -62,8 +61,12 @@ public class DevolucionService {
                             ", solicitado: " + request.getCantidad());
         }
 
-        Usuario recepcionista = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con id: " + usuarioId));
+        AuthClient.UsuarioBasicResponse recepcionista;
+        try {
+            recepcionista = authClient.getUsuarioById(usuarioId);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Usuario no encontrado con id: " + usuarioId);
+        }
 
         if ("Apto".equals(request.getCondicionProducto())) {
             ReponerStockRequest reponerRequest = new ReponerStockRequest();
@@ -84,7 +87,8 @@ public class DevolucionService {
         devolucion.setEstado("Procesada");
         devolucion.setObservaciones(request.getObservaciones());
         devolucion.setFechaSolicitud(LocalDateTime.now());
-        devolucion.setRecepcionista(recepcionista);
+        devolucion.setRecepcionistaId(recepcionista.id());
+        devolucion.setRecepcionistaNombre(recepcionista.nombre());
 
         Devolucion guardada = devolucionRepository.save(devolucion);
 

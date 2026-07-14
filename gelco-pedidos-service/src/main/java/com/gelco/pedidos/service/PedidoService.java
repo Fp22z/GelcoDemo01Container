@@ -1,6 +1,7 @@
 package com.gelco.pedidos.service;
 
 import com.gelco.pedidos.client.CatalogoClient;
+import com.gelco.pedidos.client.ConsultorasClient;
 import com.gelco.pedidos.dto.ReponerStockRequest;
 import com.gelco.pedidos.dto.CrearPedidoRequest;
 import com.gelco.pedidos.dto.DetallePedidoDevolucionResponse;
@@ -23,9 +24,9 @@ public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
-    private final ConsultoraRepository consultoraRepository;
     private final DetallePedidoRepository detallePedidoRepository;
     private final CatalogoClient catalogoClient;
+    private final ConsultorasClient consultorasClient;
 
     @Transactional(readOnly = true)
     public List<PedidoResponse> getAllPedidos() {
@@ -66,10 +67,13 @@ public class PedidoService {
     @Transactional
     public PedidoResponse crearPedidoCompleto(Long usuarioId, CrearPedidoRequest request) {
 
-        // 1. Resolver consultora
-        Consultora consultora = consultoraRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "No se encontró una consultora asociada al usuario autenticado"));
+        // 1. Resolver consultora vía Feign a Consultoras
+        ConsultorasClient.ConsultoraBasicResponse consultora;
+        try {
+            consultora = consultorasClient.getConsultoraByUsuario(usuarioId);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("No se encontró una consultora asociada al usuario autenticado");
+        }
 
         // 2. Validar cliente
         Cliente cliente = clienteRepository.findById(request.getClienteId())
@@ -109,7 +113,8 @@ public class PedidoService {
         // 5. Guardar pedido
         Pedido pedido = new Pedido();
         pedido.setCliente(cliente);
-        pedido.setConsultora(consultora);
+        pedido.setConsultoraId(consultora.id());
+        pedido.setConsultoraNombre(consultora.usuarioNombre());
         pedido.setFecha(LocalDateTime.now());
         pedido.setEstado("Creado");
         pedido.setTotal(total);
@@ -117,17 +122,13 @@ public class PedidoService {
 
         // 6. Guardar detalles y descontar stock via Feign
         List<DetallePedido> detallesGuardados = itemsValidados.stream().map(item -> {
-            // Descontar stock en Catálogo
             catalogoClient.reponerStock(item.productoId(),
                     new ReponerStockRequest(-item.cantidad()));
 
-            // Crear detalle — Producto solo con ID para la FK
-            Producto productoRef = new Producto();
-            productoRef.setId(item.productoId());
-
             DetallePedido detalle = new DetallePedido();
             detalle.setPedido(pedido);
-            detalle.setProducto(productoRef);
+            detalle.setProductoId(item.productoId());
+            detalle.setProductoNombre(item.nombre());
             detalle.setCantidad(item.cantidad());
             detalle.setPrecioUnitario(item.precio());
             return detallePedidoRepository.save(detalle);
@@ -167,8 +168,8 @@ public class PedidoService {
         return new DetallePedidoDevolucionResponse(
                 detalle.getId(),
                 detalle.getCantidad(),
-                detalle.getProducto().getId(),
-                detalle.getProducto().getNombre(),
+                detalle.getProductoId(),
+                detalle.getProductoNombre(),
                 detalle.getPedido().getId(),
                 detalle.getPedido().getEstado(),
                 detalle.getPedido().getCliente().getNombre()

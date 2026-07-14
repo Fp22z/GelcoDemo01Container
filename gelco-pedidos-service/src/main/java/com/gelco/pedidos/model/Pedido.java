@@ -14,28 +14,30 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Pedido {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "consultora_id", nullable = false)
-    private Consultora consultora;
-    
+
+    @Column(name = "consultora_id", nullable = false)
+    private Long consultoraId;
+
+    @Column(name = "consultora_nombre", length = 100)
+    private String consultoraNombre;
+
     @Column(nullable = false)
     private LocalDateTime fecha;
-    
+
     @Column(nullable = false, length = 50)
-    private String estado; // En proceso, En camino, Entregado
-    
+    private String estado;
+
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal total = BigDecimal.ZERO;
-    
+
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 }

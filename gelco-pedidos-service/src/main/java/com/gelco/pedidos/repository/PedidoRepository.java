@@ -12,22 +12,22 @@ import java.util.Optional;
 @Repository
 public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
-    @Query("SELECT p FROM Pedido p JOIN FETCH p.cliente JOIN FETCH p.consultora c JOIN FETCH c.usuario WHERE p.consultora.id = :consultoraId")
+    @Query("SELECT p FROM Pedido p JOIN FETCH p.cliente WHERE p.consultoraId = :consultoraId")
     List<Pedido> findByConsultoraId(@Param("consultoraId") Long consultoraId);
 
-    @Query("SELECT p FROM Pedido p JOIN FETCH p.cliente JOIN FETCH p.consultora c JOIN FETCH c.usuario WHERE p.cliente.id = :clienteId")
+    @Query("SELECT p FROM Pedido p JOIN FETCH p.cliente WHERE p.cliente.id = :clienteId")
     List<Pedido> findByClienteId(@Param("clienteId") Long clienteId);
 
-    @Query("SELECT p FROM Pedido p JOIN FETCH p.cliente JOIN FETCH p.consultora c JOIN FETCH c.usuario WHERE p.estado = :estado")
+    @Query("SELECT p FROM Pedido p JOIN FETCH p.cliente WHERE p.estado = :estado")
     List<Pedido> findByEstado(@Param("estado") String estado);
 
-    @Query("SELECT p FROM Pedido p JOIN FETCH p.cliente JOIN FETCH p.consultora c JOIN FETCH c.usuario WHERE p.id = :id")
+    @Query("SELECT p FROM Pedido p JOIN FETCH p.cliente WHERE p.id = :id")
     Optional<Pedido> findByIdWithRelations(@Param("id") Long id);
 
-    @Query("SELECT p FROM Pedido p JOIN FETCH p.cliente JOIN FETCH p.consultora c JOIN FETCH c.usuario")
+    @Query("SELECT p FROM Pedido p JOIN FETCH p.cliente")
     List<Pedido> findAllWithRelations();
 
-    @Query("SELECT p.cliente.id, COUNT(p) FROM Pedido p WHERE p.consultora.id = :consultoraId AND p.estado IN ('Creado', 'Enviado a Almacén', 'En camino') GROUP BY p.cliente.id")
+    @Query("SELECT p.cliente.id, COUNT(p) FROM Pedido p WHERE p.consultoraId = :consultoraId AND p.estado IN ('Creado', 'Enviado a Almacén', 'En camino') GROUP BY p.cliente.id")
     List<Object[]> countPendientesByConsultoraIdGroupByCliente(@Param("consultoraId") Long consultoraId);
 
     long countByClienteId(Long clienteId);

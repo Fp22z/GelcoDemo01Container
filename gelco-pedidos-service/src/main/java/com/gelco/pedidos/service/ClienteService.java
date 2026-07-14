@@ -1,9 +1,8 @@
 package com.gelco.pedidos.service;
 
+import com.gelco.pedidos.client.ConsultorasClient;
 import com.gelco.pedidos.model.Cliente;
-import com.gelco.pedidos.model.Consultora;
 import com.gelco.pedidos.repository.ClienteRepository;
-import com.gelco.pedidos.repository.ConsultoraRepository;
 import com.gelco.pedidos.repository.PedidoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,7 @@ public class ClienteService {
 
     private final ClienteRepository clienteRepository;
     private final PedidoRepository pedidoRepository;
-    private final ConsultoraRepository consultoraRepository;
+    private final ConsultorasClient consultorasClient;
 
     public List<Cliente> getAllByConsultora(Long consultoraId) {
         return clienteRepository.findByConsultoraId(consultoraId);
@@ -30,9 +29,12 @@ public class ClienteService {
     }
 
     public Cliente create(Cliente cliente, Long consultoraId) {
-        Consultora consultora = consultoraRepository.findById(consultoraId)
-                .orElseThrow(() -> new IllegalArgumentException("Consultora no encontrada"));
-        cliente.setConsultora(consultora);
+        try {
+            consultorasClient.getConsultoraById(consultoraId);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Consultora no encontrada");
+        }
+        cliente.setConsultoraId(consultoraId);
         return clienteRepository.save(cliente);
     }
 

@@ -13,22 +13,27 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CapacitacionConsultora {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "capacitacion_id", nullable = false)
     private Capacitacion capacitacion;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "consultora_id", nullable = false)
-    private Consultora consultora;
-    
+
+    @Column(name = "consultora_id", nullable = false)
+    private Long consultoraId;
+
+    @Column(name = "consultora_nombre", length = 100)
+    private String consultoraNombre;
+
+    @Column(name = "consultora_nivel", length = 100)
+    private String consultoraNivel;
+
     @Column(nullable = false)
     private Boolean completado;
-    
+
     @Column(precision = 5, scale = 2)
     private BigDecimal puntaje;
 }

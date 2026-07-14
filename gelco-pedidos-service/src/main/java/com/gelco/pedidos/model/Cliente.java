@@ -1,6 +1,5 @@
 package com.gelco.pedidos.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,8 +28,6 @@ public class Cliente {
     @Column(columnDefinition = "nvarchar(MAX)")
     private String preferencias;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "consultora_id", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private Consultora consultora;
+    @Column(name = "consultora_id", nullable = false)
+    private Long consultoraId;
 }

@@ -1,21 +1,22 @@
-package com.gelco.capacitacion.client;
+package com.gelco.pedidos.client;
 
-import com.gelco.capacitacion.dto.VentaConsultoraDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.List;
 
 @FeignClient(name = "gelco-consultoras-service")
 public interface ConsultorasClient {
 
     record ConsultoraBasicResponse(Long id, Long usuarioId, String usuarioNombre, String nivel) {}
 
-    @GetMapping("/api/v1/ventas/consultora/{consultoraId}/mes/{mes}/anio/{anio}")
-    VentaConsultoraDTO getVentaPorMes(@PathVariable Long consultoraId, @PathVariable int mes, @PathVariable int anio);
+    @GetMapping("/api/v1/consultoras/usuario/{usuarioId}")
+    ConsultoraBasicResponse getConsultoraByUsuario(@PathVariable Long usuarioId);
 
     @GetMapping("/api/v1/consultoras/{id}")
     ConsultoraBasicResponse getConsultoraById(@PathVariable Long id);
 
-    @GetMapping("/api/v1/consultoras/usuario/{usuarioId}")
-    ConsultoraBasicResponse getConsultoraByUsuario(@PathVariable Long usuarioId);
+    @GetMapping("/api/v1/consultoras")
+    List<ConsultoraBasicResponse> getAllConsultoras();
 }

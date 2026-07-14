@@ -5,11 +5,9 @@ import com.gelco.capacitacion.dto.*;
 import com.gelco.capacitacion.model.Capacitacion;
 import com.gelco.capacitacion.model.CapacitacionConsultora;
 import com.gelco.capacitacion.model.CapacitacionPregunta;
-import com.gelco.capacitacion.model.Consultora;
 import com.gelco.capacitacion.repository.CapacitacionConsultoraRepository;
 import com.gelco.capacitacion.repository.CapacitacionPreguntaRepository;
 import com.gelco.capacitacion.repository.CapacitacionRepository;
-import com.gelco.capacitacion.repository.ConsultoraRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +26,6 @@ public class CapacitacionService {
     private final CapacitacionRepository capacitacionRepository;
     private final CapacitacionConsultoraRepository capacitacionConsultoraRepository;
     private final CapacitacionPreguntaRepository capacitacionPreguntaRepository;
-    private final ConsultoraRepository consultoraRepository;
     private final ConsultorasClient consultorasClient;
 
 
@@ -171,12 +168,18 @@ public class CapacitacionService {
             Capacitacion capacitacion = capacitacionRepository.findById(capId)
                     .orElseThrow(() -> new IllegalArgumentException("Capacitacion no encontrada"));
 
-            Consultora consultora = consultoraRepository.findById(consulId)
-                    .orElseThrow(() -> new IllegalArgumentException("Consultora no encontrada"));
+            ConsultorasClient.ConsultoraBasicResponse consultora;
+            try {
+                consultora = consultorasClient.getConsultoraById(consulId);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Consultora no encontrada");
+            }
 
             CapacitacionConsultora inscripcion = new CapacitacionConsultora();
             inscripcion.setCapacitacion(capacitacion);
-            inscripcion.setConsultora(consultora);
+            inscripcion.setConsultoraId(consultora.id());
+            inscripcion.setConsultoraNombre(consultora.usuarioNombre());
+            inscripcion.setConsultoraNivel(consultora.nivel());
             inscripcion.setCompletado(false);
 
             CapacitacionConsultora savedInscripcion = capacitacionConsultoraRepository.save(inscripcion);
@@ -260,22 +263,22 @@ public class CapacitacionService {
             int anioDespues = mesCap == 12 ? anioCap + 1 : anioCap;
 
             for (CapacitacionConsultora insc : inscripciones) {
-                Consultora consul = insc.getConsultora();
-                String nombreConsul = consul.getUsuario().getNombre();
-                String nivel = consul.getNivel();
+                Long consulId = insc.getConsultoraId();
+                String nombreConsul = insc.getConsultoraNombre();
+                String nivel = insc.getConsultoraNivel();
 
                 BigDecimal ventasAntes = BigDecimal.ZERO;
                 BigDecimal ventasDespues = BigDecimal.ZERO;
                 BigDecimal porcentajeMejora = BigDecimal.ZERO;
 
-                VentaConsultoraDTO ventaAntes = consultorasClient.getVentaPorMes(consul.getId(), mesAntes, anioAntes);
+                VentaConsultoraDTO ventaAntes = consultorasClient.getVentaPorMes(consulId, mesAntes, anioAntes);
                 if (ventaAntes.getRegistros() != null && ventaAntes.getRegistros() > 0) {
                     ventasAntes = ventaAntes.getTotalVentas();
                     sumVentasAntes = sumVentasAntes.add(ventasAntes);
                     countVentasAntes++;
                 }
 
-                VentaConsultoraDTO ventaDespues = consultorasClient.getVentaPorMes(consul.getId(), mesDespues, anioDespues);
+                VentaConsultoraDTO ventaDespues = consultorasClient.getVentaPorMes(consulId, mesDespues, anioDespues);
                 if (ventaDespues.getRegistros() != null && ventaDespues.getRegistros() > 0) {
                     ventasDespues = ventaDespues.getTotalVentas();
                     sumVentasDespues = sumVentasDespues.add(ventasDespues);
@@ -298,7 +301,7 @@ public class CapacitacionService {
 
                 EfektividadCapacitacionResponse.EfektividadConsultoraItem item =
                         new EfektividadCapacitacionResponse.EfektividadConsultoraItem();
-                item.setConsultoraId(consul.getId());
+                item.setConsultoraId(consulId);
                 item.setConsultoraNombre(nombreConsul);
                 item.setNivel(nivel);
                 item.setCompletado(insc.getCompletado());
@@ -314,7 +317,7 @@ public class CapacitacionService {
 
             BigDecimal tasaCompletacion = totalInscripciones > 0
                     ? BigDecimal.valueOf(totalCompletadas).divide(BigDecimal.valueOf(totalInscripciones), 4, RoundingMode.HALF_UP)
-                            .multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP)
                     : BigDecimal.ZERO;
 
             BigDecimal puntajePromedio = countPuntaje > 0

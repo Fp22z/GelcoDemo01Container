@@ -1,9 +1,9 @@
 package com.gelco.pedidos.controller;
 
+import com.gelco.pedidos.client.ConsultorasClient;
 import com.gelco.pedidos.dto.CrearPedidoRequest;
 import com.gelco.pedidos.dto.ErrorResponse;
 import com.gelco.pedidos.dto.PedidoResponse;
-import com.gelco.pedidos.repository.ConsultoraRepository;
 import com.gelco.pedidos.service.PedidoService;
 import com.gelco.pedidos.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,7 +25,7 @@ public class PedidoController {
 
     private final PedidoService pedidoService;
     private final JwtUtil       jwtUtil;
-    private final ConsultoraRepository consultoraRepository;
+    private final ConsultorasClient consultorasClient;
 
     // ── GET /pedidos ──────────────────────────────────────────────
     @GetMapping
@@ -173,9 +173,11 @@ public class PedidoController {
 
     private Long getConsultoraIdFromJwt(HttpServletRequest request) {
         Long usuarioId = getUsuarioIdFromJwt(request);
-        return consultoraRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new IllegalArgumentException("Consultora no encontrada para este usuario"))
-                .getId();
+        try {
+            return consultorasClient.getConsultoraByUsuario(usuarioId).id();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Consultora no encontrada para este usuario");
+        }
     }
 
     private String extraerToken(HttpServletRequest request) {

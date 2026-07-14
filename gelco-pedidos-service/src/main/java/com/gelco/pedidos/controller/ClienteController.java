@@ -1,8 +1,8 @@
 package com.gelco.pedidos.controller;
 
+import com.gelco.pedidos.client.ConsultorasClient;
 import com.gelco.pedidos.dto.ErrorResponse;
 import com.gelco.pedidos.model.Cliente;
-import com.gelco.pedidos.repository.ConsultoraRepository;
 import com.gelco.pedidos.service.ClienteService;
 import com.gelco.pedidos.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +21,7 @@ public class ClienteController {
 
     private final ClienteService clienteService;
     private final JwtUtil jwtUtil;
-    private final ConsultoraRepository consultoraRepository;
+    private final ConsultorasClient consultorasClient;
 
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAll(HttpServletRequest request) {
@@ -91,8 +91,10 @@ public class ClienteController {
         String authHeader = request.getHeader("Authorization");
         String token = authHeader.substring(7);
         Long usuarioId = jwtUtil.getUsuarioIdFromToken(token);
-        return consultoraRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new IllegalArgumentException("Consultora no encontrada para este usuario"))
-                .getId();
+        try {
+            return consultorasClient.getConsultoraByUsuario(usuarioId).id();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Consultora no encontrada para este usuario");
+        }
     }
 }
