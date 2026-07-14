@@ -205,4 +205,26 @@ public class ProductoController {
         }
     }
 
+    @GetMapping("/renovacion/mas-vendidos")
+    public ResponseEntity<?> getProductosMasVendidos(@RequestParam(defaultValue = "10") Integer limit) {
+        try {
+            var productos = productoService.getProductosMasVendidos(limit);
+            return ResponseEntity.ok(productos);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse(500, "Error al obtener productos mas vendidos", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/renovacion/sugerencias")
+    public ResponseEntity<?> getSugerenciasReposicion() {
+        try {
+            var sugerencias = productoService.getSugerenciasReposicionTodos();
+            return ResponseEntity.ok(sugerencias);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse(500, "Error al obtener sugerencias de reposicion", e.getMessage()));
+        }
+    }
+
 }

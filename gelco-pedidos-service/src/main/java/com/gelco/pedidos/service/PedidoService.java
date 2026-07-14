@@ -160,6 +160,18 @@ public class PedidoService {
         pedidoRepository.delete(pedido);
     }
 
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getVentasAgrupadasPorProducto() {
+        return detallePedidoRepository.findVentasAgrupadasPorProductoTodos().stream()
+                .map(row -> {
+                    Map<String, Object> m = new java.util.HashMap<>();
+                    m.put("productoId", (Long) row[0]);
+                    m.put("totalCantidad", ((Long) row[1]).intValue());
+                    return m;
+                })
+                .collect(Collectors.toList());
+    }
+
     public DetallePedidoDevolucionResponse getDetalleParaDevolucion(Long detallePedidoId) {
         DetallePedido detalle = detallePedidoRepository.findById(detallePedidoId)
                 .orElseThrow(() -> new IllegalArgumentException(
