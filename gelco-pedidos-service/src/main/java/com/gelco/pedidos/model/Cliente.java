@@ -25,7 +25,7 @@ public class Cliente {
     @Column(length = 300)
     private String direccion;
 
-    @Column(columnDefinition = "nvarchar(MAX)")
+    @Column(columnDefinition = "TEXT")
     private String preferencias;
 
     @Column(name = "consultora_id", nullable = false)

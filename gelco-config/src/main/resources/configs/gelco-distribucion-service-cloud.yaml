@@ -1,0 +1,16 @@
+server:
+  port: 8087
+spring:
+  datasource:
+    url: jdbc:mysql://mysql.railway.internal:3306/gelco_distribucion?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: ozxcMglnhVvUHabWzeEKiybKlWOmxAAU
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQLDialect
+    show-sql: false
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration: 3600000

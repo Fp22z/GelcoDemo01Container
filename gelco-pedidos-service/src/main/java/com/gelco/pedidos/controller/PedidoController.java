@@ -197,4 +197,15 @@ public class PedidoController {
                     .body(new ErrorResponse(400, "Detalle no encontrado", e.getMessage()));
         }
     }
+    
+    @GetMapping("/ventas-agrupadas-por-producto")
+    public ResponseEntity<?> getVentasAgrupadasPorProducto() {
+        try {
+            return ResponseEntity.ok(pedidoService.getVentasAgrupadasPorProducto());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse(500, "Error al obtener ventas agrupadas", e.getMessage()));
+        }
+    }
+
 }

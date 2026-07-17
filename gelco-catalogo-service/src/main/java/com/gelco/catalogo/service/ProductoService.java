@@ -1,5 +1,6 @@
 package com.gelco.catalogo.service;
 
+import com.gelco.catalogo.client.PedidosClient;
 import com.gelco.catalogo.dto.ProductoResponse;
 import com.gelco.catalogo.model.Categoria;
 import com.gelco.catalogo.model.InventarioMovimiento;
@@ -13,7 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -145,7 +149,84 @@ public class ProductoService {
         }
     }
 
-    public static final int STOCK_UMBRAL_ALERTA = 5;
+    private static final int STOCK_UMBRAL_ALERTA = 5;
+    private final PedidosClient pedidosClient;
+
+    public List<ProductoMasVendido> getProductosMasVendidos(Integer limit) {
+        try {
+            List<Map<String, Object>> resultados = pedidosClient.getVentasAgrupadasPorProducto();
+            List<ProductoMasVendido> masVendidos = new ArrayList<>();
+
+            for (Map<String, Object> row : resultados) {
+                Long productoId = ((Number) row.get("productoId")).longValue();
+                int totalCantidad = ((Number) row.get("totalCantidad")).intValue();
+                productoRepository.findById(productoId).ifPresent(producto ->
+                        masVendidos.add(new ProductoMasVendido(
+                                producto.getId(),
+                                producto.getNombre(),
+                                producto.getStock(),
+                                totalCantidad,
+                                producto.getPrecio()
+                        )));
+            }
+
+            return masVendidos.size() > limit ? masVendidos.subList(0, limit) : masVendidos;
+        } catch (Exception e) {
+            throw new RuntimeException("Error al obtener productos mas vendidos: " + e.getMessage());
+        }
+    }
+
+    public List<SugerenciaReposicion> getSugerenciasReposicionTodos() {
+        try {
+            List<Producto> productosStockBajo = productoRepository.findByStockLessThanEqual(STOCK_UMBRAL_ALERTA);
+            List<Map<String, Object>> resultadosVentas = pedidosClient.getVentasAgrupadasPorProducto();
+
+            Map<Long, Integer> ventasMap = new HashMap<>();
+            for (Map<String, Object> row : resultadosVentas) {
+                Long productoId = ((Number) row.get("productoId")).longValue();
+                int totalCantidad = ((Number) row.get("totalCantidad")).intValue();
+                ventasMap.put(productoId, totalCantidad);
+            }
+
+            List<SugerenciaReposicion> sugerencias = new ArrayList<>();
+            int stockMinimoReposicion = 20;
+
+            for (Producto producto : productosStockBajo) {
+                int stockActual = producto.getStock();
+                int cantidadVendida = ventasMap.getOrDefault(producto.getId(), 0);
+                int cantidadSugerida = Math.max(stockMinimoReposicion - stockActual, cantidadVendida * 2);
+                sugerencias.add(new SugerenciaReposicion(
+                        producto.getId(),
+                        producto.getNombre(),
+                        stockActual,
+                        cantidadVendida,
+                        cantidadSugerida,
+                        producto.getPrecio()
+                ));
+            }
+
+            return sugerencias;
+        } catch (Exception e) {
+            throw new RuntimeException("Error al obtener sugerencias de reposicion: " + e.getMessage());
+        }
+    }
+
+    public record ProductoMasVendido(
+            Long productoId,
+            String nombre,
+            Integer stockActual,
+            Integer cantidadVendida,
+            BigDecimal precio
+    ) {}
+
+    public record SugerenciaReposicion(
+            Long productoId,
+            String nombre,
+            Integer stockActual,
+            Integer ventasTotales,
+            Integer cantidadSugerida,
+            BigDecimal precio
+    ) {}
 
     public InventarioResumen getInventarioResumen() {
         try {
@@ -199,22 +280,6 @@ public class ProductoService {
             long productosAgotados,
             long productosStockBajo
     ) {}
-
-    public record ProductoMasVendido(
-            Long productoId,
-            String nombre,
-            Integer stockActual,
-            Integer cantidadVendida,
-            BigDecimal precio
-    ) {}
-
-    public record SugerenciaReposicion(
-            Long productoId,
-            String nombre,
-            Integer stockActual,
-            Integer ventasTotales,
-            Integer cantidadSugerida,
-            BigDecimal precio
-    ) {}
+    
 
 }

@@ -1,0 +1,132 @@
+# ══════════════════════════════════════════════════════════
+# EUREKA — gelco-discovery
+# ══════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-discovery
+  namespace: gelco
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: gelco-discovery }
+  template:
+    metadata:
+      labels: { app: gelco-discovery }
+    spec:
+      containers:
+        - name: gelco-discovery
+          # imagePullPolicy: Never -> usa la imagen que ya construiste
+          # localmente con "docker compose build"; con Docker Desktop
+          # Kubernetes comparte el mismo daemon de Docker, así que no
+          # hace falta subirla a ningún registro.
+          image: gelcodemo01container-gelco-discovery
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8761
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8761 }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /actuator/health, port: 8761 }
+            initialDelaySeconds: 40
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-discovery
+  namespace: gelco
+spec:
+  selector: { app: gelco-discovery }
+  ports:
+    - { port: 8761, targetPort: 8761 }
+  type: NodePort
+
+---
+# ══════════════════════════════════════════════════════════
+# CONFIG SERVER — gelco-config
+# ══════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-config
+  namespace: gelco
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: gelco-config }
+  template:
+    metadata:
+      labels: { app: gelco-config }
+    spec:
+      initContainers:
+        - name: wait-for-eureka
+          image: busybox:1.36
+          command: ["sh", "-c", "until nc -z gelco-discovery 8761; do echo esperando a Eureka...; sleep 3; done"]
+      containers:
+        - name: gelco-config
+          image: gelcodemo01container-gelco-config
+          imagePullPolicy: Never
+          envFrom:
+            - configMapRef: { name: gelco-common-config }
+          ports:
+            - containerPort: 8888
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8888 }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-config
+  namespace: gelco
+spec:
+  selector: { app: gelco-config }
+  ports:
+    - { port: 8888, targetPort: 8888 }
+
+---
+# ══════════════════════════════════════════════════════════
+# GATEWAY — gelco-gateway (única puerta de entrada)
+# ══════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-gateway
+  namespace: gelco
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: gelco-gateway }
+  template:
+    metadata:
+      labels: { app: gelco-gateway }
+    spec:
+      initContainers:
+        - name: wait-for-config
+          image: busybox:1.36
+          command: ["sh", "-c", "until nc -z gelco-config 8888; do echo esperando a Config Server...; sleep 3; done"]
+      containers:
+        - name: gelco-gateway
+          image: gelcodemo01container-gelco-gateway
+          imagePullPolicy: Never
+          envFrom:
+            - configMapRef: { name: gelco-common-config }
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-gateway
+  namespace: gelco
+spec:
+  selector: { app: gelco-gateway }
+  ports:
+    - { port: 8080, targetPort: 8080 }
+  # NodePort para poder entrar desde el navegador/Insomnia/frontend
+  # igual que hacías con "localhost:8080" en Docker Compose.
+  type: NodePort

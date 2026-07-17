@@ -29,7 +29,7 @@ services:
     image: postgres:16-alpine
     container_name: gelco-db-postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       POSTGRES_USER: gelco_admin
       POSTGRES_PASSWORD: gelco2026*
@@ -177,12 +177,6 @@ services:
         condition: service_healthy
       gelco-db-postgres:
         condition: service_healthy
-      gelco-pedidos-service:
-        condition: service_started
-      gelco-catalogo-service:
-        condition: service_started
-      gelco-auth-service:
-        condition: service_started
 
   # ══════════════════════════════════════════════════════════
   # SERVICIOS DE NEGOCIO — MySQL
@@ -203,8 +197,6 @@ services:
         condition: service_healthy
       gelco-db-mysql:
         condition: service_healthy
-      gelco-catalogo-service:
-        condition: service_started
 
   gelco-capacitacion-service:
     build: ./gelco-capacitacion-service
@@ -221,8 +213,6 @@ services:
         condition: service_healthy
       gelco-db-mysql:
         condition: service_healthy
-      gelco-consultoras-service:
-        condition: service_started
 
   gelco-distribucion-service:
     build: ./gelco-distribucion-service
@@ -257,12 +247,6 @@ services:
         condition: service_healthy
       gelco-discovery:
         condition: service_healthy
-      gelco-pedidos-service:
-        condition: service_started
-      gelco-consultoras-service:
-        condition: service_started
-      gelco-catalogo-service:
-        condition: service_started
 
 volumes:
   postgres_data:
