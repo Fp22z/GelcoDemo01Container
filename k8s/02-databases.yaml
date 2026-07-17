@@ -1,0 +1,178 @@
+# ══════════════════════════════════════════════════════════
+# SQL SERVER — gelco_auth
+# ══════════════════════════════════════════════════════════
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sqlserver-data
+  namespace: gelco
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-db-sqlserver
+  namespace: gelco
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: gelco-db-sqlserver }
+  template:
+    metadata:
+      labels: { app: gelco-db-sqlserver }
+    spec:
+      containers:
+        - name: sqlserver
+          image: mcr.microsoft.com/mssql/server:2022-latest
+          command: ["/bin/bash", "/init-db/mssql-entrypoint.sh"]
+          env:
+            - { name: ACCEPT_EULA, value: "Y" }
+            - { name: MSSQL_PID, value: "Express" }
+            - name: MSSQL_SA_PASSWORD
+              valueFrom: { secretKeyRef: { name: gelco-db-secrets, key: MSSQL_SA_PASSWORD } }
+          ports:
+            - containerPort: 1433
+          volumeMounts:
+            - { name: data, mountPath: /var/opt/mssql }
+            - { name: init-script, mountPath: /init-db }
+          readinessProbe:
+            exec:
+              command: ["/bin/bash", "-c", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1'"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 10
+      volumes:
+        - { name: data, persistentVolumeClaim: { claimName: sqlserver-data } }
+        - { name: init-script, configMap: { name: mssql-init-script, defaultMode: 0755 } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-db-sqlserver
+  namespace: gelco
+spec:
+  selector: { app: gelco-db-sqlserver }
+  ports:
+    - { port: 1433, targetPort: 1433 }
+
+---
+# ══════════════════════════════════════════════════════════
+# POSTGRES — gelco_catalogo, gelco_consultoras, gelco_devoluciones
+# ══════════════════════════════════════════════════════════
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data
+  namespace: gelco
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-db-postgres
+  namespace: gelco
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: gelco-db-postgres }
+  template:
+    metadata:
+      labels: { app: gelco-db-postgres }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          env:
+            - { name: POSTGRES_USER, value: "gelco_admin" }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: gelco-db-secrets, key: POSTGRES_PASSWORD } }
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/postgresql/data }
+            - { name: init-script, mountPath: /docker-entrypoint-initdb.d }
+          readinessProbe:
+            exec: { command: ["pg_isready", "-U", "gelco_admin"] }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - { name: data, persistentVolumeClaim: { claimName: postgres-data } }
+        - { name: init-script, configMap: { name: postgres-init-script, defaultMode: 0755 } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-db-postgres
+  namespace: gelco
+spec:
+  selector: { app: gelco-db-postgres }
+  ports:
+    - { port: 5432, targetPort: 5432 }
+
+---
+# ══════════════════════════════════════════════════════════
+# MYSQL — gelco_pedidos, gelco_capacitacion, gelco_distribucion
+# ══════════════════════════════════════════════════════════
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-data
+  namespace: gelco
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-db-mysql
+  namespace: gelco
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: gelco-db-mysql }
+  template:
+    metadata:
+      labels: { app: gelco-db-mysql }
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom: { secretKeyRef: { name: gelco-db-secrets, key: MYSQL_ROOT_PASSWORD } }
+            - { name: MYSQL_USER, value: "gelco_app" }
+            - name: MYSQL_PASSWORD
+              valueFrom: { secretKeyRef: { name: gelco-db-secrets, key: MYSQL_PASSWORD } }
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/mysql }
+            - { name: init-script, mountPath: /docker-entrypoint-initdb.d }
+          readinessProbe:
+            exec: { command: ["mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pgelco2026*"] }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+      volumes:
+        - { name: data, persistentVolumeClaim: { claimName: mysql-data } }
+        - { name: init-script, configMap: { name: mysql-init-script, defaultMode: 0755 } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-db-mysql
+  namespace: gelco
+spec:
+  selector: { app: gelco-db-mysql }
+  ports:
+    - { port: 3306, targetPort: 3306 }
