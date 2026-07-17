@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o k8s/
+    kompose.version: 1.38.0 (a8f5d1cbd)
+  labels:
+    io.kompose.service: gelco-db-sqlserver
+  name: gelco-db-sqlserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: gelco-db-sqlserver
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o k8s/
+        kompose.version: 1.38.0 (a8f5d1cbd)
+      labels:
+        io.kompose.service: gelco-db-sqlserver
+    spec:
+      containers:
+        - command:
+            - /bin/bash
+            - /init-db/mssql-entrypoint.sh
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: MSSQL_PID
+              value: Express
+            - name: MSSQL_SA_PASSWORD
+              value: Gelco2026*Strong
+          image: mcr.microsoft.com/mssql/server:2022-latest
+          livenessProbe:
+            exec:
+              command:
+                - /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -Q 'SELECT 1' || exit 1
+            failureThreshold: 10
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: gelco-db-sqlserver
+          ports:
+            - containerPort: 1433
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/opt/mssql
+              name: sqlserver-data
+            - mountPath: /init-db/mssql-init.sql
+              name: gelco-db-sqlserver-cm1
+              subPath: mssql-init.sql
+            - mountPath: /init-db/mssql-entrypoint.sh
+              name: gelco-db-sqlserver-cm2
+              subPath: mssql-entrypoint.sh
+      restartPolicy: Always
+      volumes:
+        - name: sqlserver-data
+          persistentVolumeClaim:
+            claimName: sqlserver-data
+        - configMap:
+            items:
+              - key: mssql-init.sql
+                path: mssql-init.sql
+            name: gelco-db-sqlserver-cm1
+          name: gelco-db-sqlserver-cm1
+        - configMap:
+            items:
+              - key: mssql-entrypoint.sh
+                path: mssql-entrypoint.sh
+            name: gelco-db-sqlserver-cm2
+          name: gelco-db-sqlserver-cm2

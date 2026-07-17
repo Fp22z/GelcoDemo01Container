@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o k8s/
+    kompose.version: 1.38.0 (a8f5d1cbd)
+  labels:
+    io.kompose.service: gelco-db-postgres
+  name: gelco-db-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: gelco-db-postgres
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o k8s/
+        kompose.version: 1.38.0 (a8f5d1cbd)
+      labels:
+        io.kompose.service: gelco-db-postgres
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_MULTIPLE_DATABASES
+              value: gelco_catalogo,gelco_consultoras,gelco_devoluciones
+            - name: POSTGRES_PASSWORD
+              value: gelco2026*
+            - name: POSTGRES_USER
+              value: gelco_admin
+          image: postgres:16-alpine
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready -U gelco_admin
+            failureThreshold: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: gelco-db-postgres
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-data
+            - mountPath: /docker-entrypoint-initdb.d/init.sh
+              name: gelco-db-postgres-cm1
+              subPath: init.sh
+      restartPolicy: Always
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-data
+        - configMap:
+            items:
+              - key: postgres-init.sh
+                path: init.sh
+            name: gelco-db-postgres-cm1
+          name: gelco-db-postgres-cm1

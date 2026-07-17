@@ -1,0 +1,14 @@
+apiVersion: v1
+data:
+  mssql-init.sql: |-
+    IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'gelco_auth')
+    BEGIN
+        CREATE DATABASE gelco_auth;
+    END
+kind: ConfigMap
+metadata:
+  annotations:
+    use-subpath: "true"
+  labels:
+    io.kompose.service: gelco-db-sqlserver
+  name: gelco-db-sqlserver-cm1

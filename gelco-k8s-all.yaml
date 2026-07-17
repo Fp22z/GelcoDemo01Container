@@ -1,0 +1,495 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sqlserver-data
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-data
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-db-sqlserver
+spec:
+  ports: [{port: 1433, targetPort: 1433}]
+  selector:
+    app: gelco-db-sqlserver
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-db-postgres
+spec:
+  ports: [{port: 5432, targetPort: 5432}]
+  selector:
+    app: gelco-db-postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-db-mysql
+spec:
+  ports: [{port: 3306, targetPort: 3306}]
+  selector:
+    app: gelco-db-mysql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-discovery
+spec:
+  ports: [{port: 8761, targetPort: 8761}]
+  selector:
+    app: gelco-discovery
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-config
+spec:
+  ports: [{port: 8888, targetPort: 8888}]
+  selector:
+    app: gelco-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-gateway
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
+  selector:
+    app: gelco-gateway
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-auth-service
+spec:
+  ports: [{port: 8081, targetPort: 8081}]
+  selector:
+    app: gelco-auth-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-catalogo-service
+spec:
+  ports: [{port: 8082, targetPort: 8082}]
+  selector:
+    app: gelco-catalogo-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-pedidos-service
+spec:
+  ports: [{port: 8083, targetPort: 8083}]
+  selector:
+    app: gelco-pedidos-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-consultoras-service
+spec:
+  ports: [{port: 8084, targetPort: 8084}]
+  selector:
+    app: gelco-consultoras-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-capacitacion-service
+spec:
+  ports: [{port: 8085, targetPort: 8085}]
+  selector:
+    app: gelco-capacitacion-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-devoluciones-service
+spec:
+  ports: [{port: 8086, targetPort: 8086}]
+  selector:
+    app: gelco-devoluciones-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-distribucion-service
+spec:
+  ports: [{port: 8087, targetPort: 8087}]
+  selector:
+    app: gelco-distribucion-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gelco-reportes-service
+spec:
+  ports: [{port: 8088, targetPort: 8088}]
+  selector:
+    app: gelco-reportes-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-db-sqlserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gelco-db-sqlserver
+  template:
+    metadata:
+      labels:
+        app: gelco-db-sqlserver
+    spec:
+      containers:
+        - name: sqlserver
+          image: mcr.microsoft.com/mssql/server:2022-latest
+          ports: [{containerPort: 1433}]
+          env:
+            - {name: ACCEPT_EULA, value: "Y"}
+            - {name: MSSQL_SA_PASSWORD, value: "Gelco2026*Strong"}
+            - {name: MSSQL_PID, value: Express}
+          volumeMounts:
+            - {name: data, mountPath: /var/opt/mssql}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: sqlserver-data
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-db-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gelco-db-postgres
+  template:
+    metadata:
+      labels:
+        app: gelco-db-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports: [{containerPort: 5432}]
+          env:
+            - {name: POSTGRES_USER, value: gelco_admin}
+            - {name: POSTGRES_PASSWORD, value: "gelco2026*"}
+            - {name: POSTGRES_DB, value: gelco_catalogo}
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/postgresql/data}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: postgres-data
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-db-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gelco-db-mysql
+  template:
+    metadata:
+      labels:
+        app: gelco-db-mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports: [{containerPort: 3306}]
+          env:
+            - {name: MYSQL_ROOT_PASSWORD, value: "gelco2026*"}
+            - {name: MYSQL_USER, value: gelco_app}
+            - {name: MYSQL_PASSWORD, value: "gelco2026*"}
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/mysql}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: mysql-data
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-discovery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gelco-discovery
+  template:
+    metadata:
+      labels:
+        app: gelco-discovery
+    spec:
+      containers:
+        - name: gelco-discovery
+          image: gelcodemo01container-gelco-discovery
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 8761}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-config
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gelco-config
+  template:
+    metadata:
+      labels:
+        app: gelco-config
+    spec:
+      containers:
+        - name: gelco-config
+          image: gelcodemo01container-gelco-config
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 8888}]
+          env:
+            - {name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE, value: "http://gelco-discovery:8761/eureka/"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gelco-gateway
+  template:
+    metadata:
+      labels:
+        app: gelco-gateway
+    spec:
+      containers:
+        - name: gelco-gateway
+          image: gelcodemo01container-gelco-gateway
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 8080}]
+          env:
+            - {name: SPRING_CONFIG_IMPORT, value: "optional:configserver:http://gelco-config:8888"}
+            - {name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE, value: "http://gelco-discovery:8761/eureka/"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-auth-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gelco-auth-service
+  template:
+    metadata:
+      labels:
+        app: gelco-auth-service
+    spec:
+      containers:
+        - name: gelco-auth-service
+          image: gelcodemo01container-gelco-auth-service
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 8081}]
+          env:
+            - {name: SPRING_CONFIG_IMPORT, value: "optional:configserver:http://gelco-config:8888"}
+            - {name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE, value: "http://gelco-discovery:8761/eureka/"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-catalogo-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gelco-catalogo-service
+  template:
+    metadata:
+      labels:
+        app: gelco-catalogo-service
+    spec:
+      containers:
+        - name: gelco-catalogo-service
+          image: gelcodemo01container-gelco-catalogo-service
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 8082}]
+          env:
+            - {name: SPRING_CONFIG_IMPORT, value: "optional:configserver:http://gelco-config:8888"}
+            - {name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE, value: "http://gelco-discovery:8761/eureka/"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-pedidos-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gelco-pedidos-service
+  template:
+    metadata:
+      labels:
+        app: gelco-pedidos-service
+    spec:
+      containers:
+        - name: gelco-pedidos-service
+          image: gelcodemo01container-gelco-pedidos-service
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 8083}]
+          env:
+            - {name: SPRING_CONFIG_IMPORT, value: "optional:configserver:http://gelco-config:8888"}
+            - {name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE, value: "http://gelco-discovery:8761/eureka/"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-consultoras-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gelco-consultoras-service
+  template:
+    metadata:
+      labels:
+        app: gelco-consultoras-service
+    spec:
+      containers:
+        - name: gelco-consultoras-service
+          image: gelcodemo01container-gelco-consultoras-service
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 8084}]
+          env:
+            - {name: SPRING_CONFIG_IMPORT, value: "optional:configserver:http://gelco-config:8888"}
+            - {name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE, value: "http://gelco-discovery:8761/eureka/"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-capacitacion-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gelco-capacitacion-service
+  template:
+    metadata:
+      labels:
+        app: gelco-capacitacion-service
+    spec:
+      containers:
+        - name: gelco-capacitacion-service
+          image: gelcodemo01container-gelco-capacitacion-service
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 8085}]
+          env:
+            - {name: SPRING_CONFIG_IMPORT, value: "optional:configserver:http://gelco-config:8888"}
+            - {name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE, value: "http://gelco-discovery:8761/eureka/"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-devoluciones-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gelco-devoluciones-service
+  template:
+    metadata:
+      labels:
+        app: gelco-devoluciones-service
+    spec:
+      containers:
+        - name: gelco-devoluciones-service
+          image: gelcodemo01container-gelco-devoluciones-service
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 8086}]
+          env:
+            - {name: SPRING_CONFIG_IMPORT, value: "optional:configserver:http://gelco-config:8888"}
+            - {name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE, value: "http://gelco-discovery:8761/eureka/"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-distribucion-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gelco-distribucion-service
+  template:
+    metadata:
+      labels:
+        app: gelco-distribucion-service
+    spec:
+      containers:
+        - name: gelco-distribucion-service
+          image: gelcodemo01container-gelco-distribucion-service
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 8087}]
+          env:
+            - {name: SPRING_CONFIG_IMPORT, value: "optional:configserver:http://gelco-config:8888"}
+            - {name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE, value: "http://gelco-discovery:8761/eureka/"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gelco-reportes-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gelco-reportes-service
+  template:
+    metadata:
+      labels:
+        app: gelco-reportes-service
+    spec:
+      containers:
+        - name: gelco-reportes-service
+          image: gelcodemo01container-gelco-reportes-service
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 8088}]
+          env:
+            - {name: SPRING_CONFIG_IMPORT, value: "optional:configserver:http://gelco-config:8888"}
+            - {name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE, value: "http://gelco-discovery:8761/eureka/"}

@@ -1,0 +1,32 @@
+apiVersion: v1
+data:
+  mssql-entrypoint.sh: |-
+    #!/bin/bash
+    set -e
+
+    # Arranca el motor SQL Server en segundo plano
+    /opt/mssql/bin/sqlservr &
+    SQLSERVER_PID=$!
+
+    # Espera a que esté listo para aceptar conexiones
+    echo "Esperando a que SQL Server arranque..."
+    for i in {1..50}; do
+        if /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -Q "SELECT 1" &> /dev/null; then
+            echo "SQL Server listo."
+            break
+        fi
+        sleep 2
+    done
+
+    # Crea la base de datos si no existe
+    /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -i /init-db/mssql-init.sql
+
+    # Deja el proceso principal corriendo en primer plano
+    wait $SQLSERVER_PID
+kind: ConfigMap
+metadata:
+  annotations:
+    use-subpath: "true"
+  labels:
+    io.kompose.service: gelco-db-sqlserver
+  name: gelco-db-sqlserver-cm2
